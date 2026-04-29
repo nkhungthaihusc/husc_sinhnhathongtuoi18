@@ -1,4 +1,12 @@
 node_modules
 dist
+pnpm-debug.log
+.env
+.env.*
+.git
+.gitignore
+Dockerfile
+.dockerignorenode_modules
+dist
 build
 .env

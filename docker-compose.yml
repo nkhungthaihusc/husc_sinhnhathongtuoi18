@@ -1,39 +1,47 @@
 services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./backend
-    container_name: clb_backend
-    ports:
-      - "3001:3000"
-    environment:
-      - PORT=3000
-      - MONGODB_URI=mongodb://localhost:27017/clb_hienmau_husc
-      - JWT_SECRET=MatKhauBiMatChoJWT
-      - JWT_EXPIRE=24h
-      - JWT_REFRESH_SECRET=MatKhauBiMatChoJWTRefresh
-      - JWT_REFRESH_EXPIRE=7d
+    restart: unless-stopped
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      MONGODB_URI: mongodb://mongo:27017/clb-hien-mau
+      JWT_SECRET: change-me-in-production
+      JWT_REFRESH_SECRET: change-me-in-production-refresh
+      JWT_EXPIRE: 15m
+      JWT_REFRESH_EXPIRE: 7d
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin123
+      ADMIN_STUDENTID: ADMIN001
+    ports:
+      - "3000:3000"
 
   frontend:
     build:
       context: ./frontend
       args:
-        VITE_API_BASE_URL: http://localhost:3001
-    container_name: clb_frontend
-    ports:
-      - "3000:80"
+        VITE_API_BASE_URL: http://localhost:3000
+    restart: unless-stopped
     depends_on:
       - backend
-
-  mongo:
-    image: mongo:6
-    container_name: clb_mongo
-    command: ["mongod", "--bind_ip_all"]
     ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
+      - "8080:80"
 
 volumes:
   mongo_data:

@@ -1,13 +1,19 @@
-FROM node:22-alpine
+FROM node:20-alpine AS base
 
 WORKDIR /app
+RUN corepack enable
 
-RUN npm install -g pnpm
+FROM base AS deps
 
 COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --prod
 
-RUN pnpm install
+FROM base AS runner
 
+ENV NODE_ENV=production
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 EXPOSE 3000
