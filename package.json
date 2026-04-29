@@ -1,0 +1,18 @@
+{
+  "name": "clb-hien-mau",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"pnpm dev:client\" \"pnpm dev:server\"",
+    "dev:client": "cd frontend && pnpm dev",
+    "dev:server": "cd backend && pnpm dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.33.1",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

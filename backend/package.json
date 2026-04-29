@@ -1,0 +1,36 @@
+{
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.x.x",
+    "express-handlebars": "^9.0.1",
+    "express-rate-limit": "^8.3.2",
+    "jsonwebtoken": "^9.0.3",
+    "moment-timezone": "^0.6.1",
+    "mongoose": "^8.23.0",
+    "morgan": "^1.10.1"
+  },
+  "name": "my-express-app",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "beautiful": "prettier docs package.json \"src/**/*.{js,jsx,ts,tsx,json}\" --write --single-quote --trailing-comma all",
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "description": "",
+  "main": "index.js",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.8.3"
+  },
+  "hooks": {
+    "pre-commit": "npm test && npm run foo"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

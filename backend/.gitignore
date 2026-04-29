@@ -1,0 +1,28 @@
+# Dependency directories (Thư mục thư viện - CỰC KỲ QUAN TRỌNG)
+node_modules/
+
+# Environment variables (File chứa mật khẩu, URI MongoDB)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug logs (Các file nhật ký lỗi)
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Operating System files (File rác của hệ thống)
+.DS_Store
+Thumbs.db
+
+# Vercel (Thư mục cấu hình tạm của Vercel)
+.vercel
+
+# IDEs and Editors (Cấu hình riêng của VS Code)
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
