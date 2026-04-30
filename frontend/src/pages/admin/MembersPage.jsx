@@ -151,7 +151,7 @@ export default function AdminMembersPage() {
   };
 
   const onEdit = ({ student, user }) => {
-    setEditUserId(getId(user));
+    setEditUserId(user ? getId(user) : '');
     setEditStudentId(getId(student));
     setForm({
       studentId: student.studentId || '',

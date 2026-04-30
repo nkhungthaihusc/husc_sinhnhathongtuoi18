@@ -21,7 +21,7 @@ services:
         condition: service_healthy
     environment:
       PORT: 3000
-      MONGODB_URI: mongodb://mongo:27017/clb-hien-mau
+      MONGODB_URI: mongodb+srv://hungthaithcstb_db_user:Hungthai230305@cluster0.6cvwtpu.mongodb.net/clb_hienmau_husc?appName=Cluster0
       JWT_SECRET: change-me-in-production
       JWT_REFRESH_SECRET: change-me-in-production-refresh
       JWT_EXPIRE: 15m

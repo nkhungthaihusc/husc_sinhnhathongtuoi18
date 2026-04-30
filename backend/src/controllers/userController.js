@@ -26,13 +26,13 @@ class userController {
   // POST /users
   createUser = async (req, res) => {
     // Bắt đầu một Session để chạy Transaction
-    // const session = await mongoose.startSession();
+    const session = await mongoose.startSession();
     const { studentId, name, email, phone, password, ...rest } = req.body;
     console.log("Received data for new user:", req.body); // Debug: In dữ liệu nhận được ra console
     
     
     try {
-      // session.startTransaction();
+      session.startTransaction();
       // 1. Tạo User (Tài khoản đăng nhập)
       const newUser = new User({
         username: studentId,
@@ -59,15 +59,15 @@ class userController {
       console.log("New Student object created:", newStudent); // Debug: In đối tượng Student mới tạo ra console
 
       // Lưu cả hai vào DB trong cùng một transaction
-      // const savedUser = await newUser.save({ session });
-      // const savedStudent = await newStudent.save({ session });
-      const savedUser = await newUser.save();
-      const savedStudent = await newStudent.save();
+      const savedUser = await newUser.save({ session });
+      const savedStudent = await newStudent.save({ session });
+      // const savedUser = await newUser.save();
+      // const savedStudent = await newStudent.save();
       console.log("Saved User:", savedUser); // Debug: In thông tin User đã lưu ra console
       console.log("Saved Student:", savedStudent); // Debug: In thông tin Student đã lưu ra console
       // Nếu mọi thứ ok, xác nhận thay đổi vào DB
-      // await session.commitTransaction();
-      // session.endSession();
+      await session.commitTransaction();
+      session.endSession();
 
       return res.status(201).json({
         data: { user: savedUser, student: savedStudent },
@@ -76,8 +76,8 @@ class userController {
       });
     } catch (err) {
       // Nếu có bất kỳ lỗi nào, hủy bỏ toàn bộ quá trình (Rollback)
-      // await session.abortTransaction();
-      // session.endSession();
+      await session.abortTransaction();
+      session.endSession();
 
       let errorMsg = err.message;
       if (err.code === 11000) {
