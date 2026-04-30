@@ -78,6 +78,7 @@ Tạo file `backend/.env` với các biến tối thiểu:
 PORT=3000
 MONGODB_URI=mongodb://localhost:27017/clb-hien-mau
 JWT_SECRET=your_jwt_secret
+JWT_SECRET_REFRESH=your_jwt_secret_refresh
 JWT_EXPIRE=15m
 JWT_REFRESH_EXPIRE=7d
 ```
