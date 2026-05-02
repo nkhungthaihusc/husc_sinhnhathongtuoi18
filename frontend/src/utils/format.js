@@ -19,6 +19,10 @@ export function formatDate(value, withTime = false) {
   return `${day}/${month}/${year} ${hours}:${minutes}`;
 }
 
+export function formatDateTime(value) {
+  return formatDate(value, true);
+}
+
 export function formatTime(value) {
   if (!value) return '-';
   const date = new Date(value);

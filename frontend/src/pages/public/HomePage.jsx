@@ -14,7 +14,7 @@ import {
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { programsApi, registersApi } from "../../services/api.js";
-import { formatDate, formatTime, getId, isProgramRegistrationOpen, sortProgramsByRegistrationPriority } from "../../utils/format.js";
+import { formatDate, formatDateTime, getId, isProgramRegistrationOpen, sortProgramsByRegistrationPriority } from "../../utils/format.js";
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -152,7 +152,7 @@ export default function HomePage() {
                   ] : undefined}
                 >
                   <Space direction="vertical" size={4} className="program-card-content">
-                    <Text type="secondary">{formatDate(program.date)} {formatTime(program.date)}</Text>
+                    <Text type="secondary">{formatDateTime(program.date)}</Text>
                     <Tag color={canRegister ? "green" : "volcano"}>
                       {canRegister ? "Còn hạn đăng ký" : "Hết hạn đăng ký"}
                     </Tag>
@@ -162,7 +162,7 @@ export default function HomePage() {
                     <Text type="secondary">{program.count ?? "-"} người dự kiến</Text>
                     <Text type="secondary">{program.location || "-"}</Text>
                     <Text type="secondary">
-                      Hạn đăng ký: {program.registrationDeadline ? formatDate(program.registrationDeadline, true) : "Không giới hạn"}
+                      Hạn đăng ký: {program.registrationDeadline ? formatDateTime(program.registrationDeadline) : "Không giới hạn"}
                     </Text>
                   </Space>
                 </Card>
@@ -193,14 +193,14 @@ export default function HomePage() {
               style={{ width: "100%", height: 260, objectFit: "cover", borderRadius: 16 }}
             />
             <Space wrap>
-              <Text type="secondary">Ngày: {formatDate(selectedProgram.date)} {formatTime(selectedProgram.date)}</Text>
+              <Text type="secondary">Ngày: {formatDateTime(selectedProgram.date)}</Text>
               <Text type="secondary">Số lượng dự kiến: {selectedProgram.count ?? "-"}</Text>
               <Text type="secondary">Địa điểm: {selectedProgram.location || "-"}</Text>
               <Tag color={isProgramRegistrationOpen(selectedProgram) ? "green" : "volcano"}>
                 {isProgramRegistrationOpen(selectedProgram) ? "Còn hạn đăng ký" : "Hết hạn đăng ký"}
               </Tag>
               <Text type="secondary">
-                Hạn đăng ký: {selectedProgram.registrationDeadline ? formatDate(selectedProgram.registrationDeadline, true) : "Không giới hạn"}
+                Hạn đăng ký: {selectedProgram.registrationDeadline ? formatDateTime(selectedProgram.registrationDeadline) : "Không giới hạn"}
               </Text>
             </Space>
             <Card className="surface-card" bodyStyle={{ padding: 16 }}>

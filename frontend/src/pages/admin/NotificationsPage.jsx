@@ -13,7 +13,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import PageTitle from '../../components/PageTitle.jsx';
 import { notificationsApi } from '../../services/api.js';
-import { formatDate, getId } from '../../utils/format.js';
+import { formatDateTime, getId } from '../../utils/format.js';
 
 const { Text } = Typography;
 
@@ -119,7 +119,7 @@ export default function AdminNotificationsPage() {
       key: 'createdAt',
       width: 170,
       responsive: ['md'],
-      render: (value) => formatDate(value, true),
+      render: (value) => formatDateTime(value),
     },
     {
       title: 'Thao tác',

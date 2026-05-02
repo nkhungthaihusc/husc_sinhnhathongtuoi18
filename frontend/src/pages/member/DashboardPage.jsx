@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import PageTitle from "../../components/PageTitle.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
 import { notificationsApi, programsApi, registersApi, studentsApi } from "../../services/api.js";
-import { formatDate, formatTime } from "../../utils/format.js";
+import { formatDateTime } from "../../utils/format.js";
 
 export default function MemberDashboardPage() {
   const { user } = useAuth();
@@ -66,7 +66,7 @@ export default function MemberDashboardPage() {
           locale={{ emptyText: "Không có chương trình sắp tới." }}
           renderItem={(item) => (
             <List.Item>
-              <List.Item.Meta title={item.name} description={`${formatDate(item.date)} ${formatTime(item.date)} - ${item.location}`} />
+              <List.Item.Meta title={item.name} description={`${formatDateTime(item.date)} - ${item.location}`} />
             </List.Item>
           )}
         />

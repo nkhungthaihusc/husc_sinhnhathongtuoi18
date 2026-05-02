@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   Col,
+  DatePicker,
   Form,
   Image,
   Input,
@@ -15,10 +16,11 @@ import {
   Tag,
   Typography,
 } from "antd";
+import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import PageTitle from "../../components/PageTitle.jsx";
 import { programsApi } from "../../services/api.js";
-import { formatDate, formatTime, getId } from "../../utils/format.js";
+import { formatDate, formatDateTime, getId } from "../../utils/format.js";
 
 const { Text } = Typography;
 
@@ -30,14 +32,6 @@ const initialForm = {
   location: "",
   image: "",
   count: 0,
-};
-
-const toLocalDateTimeValue = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return local.toISOString().slice(0, 16);
 };
 
 export default function AdminProgramsPage() {
@@ -103,7 +97,8 @@ export default function AdminProgramsPage() {
       if (editId) {
         await programsApi.update(editId, {
           ...form,
-          registrationDeadline: form.registrationDeadline || null,
+          date: form.date ? new Date(form.date).toISOString() : null,
+          registrationDeadline: form.registrationDeadline ? new Date(form.registrationDeadline).toISOString() : null,
           count: Number(form.count) || 0,
         });
         setNotice("Cập nhật chương trình thành công.");
@@ -130,8 +125,8 @@ export default function AdminProgramsPage() {
     setForm({
       name: program.name || "",
       description: program.description || "",
-      date: toLocalDateTimeValue(program.date),
-      registrationDeadline: toLocalDateTimeValue(program.registrationDeadline),
+      date: program.date || "",
+      registrationDeadline: program.registrationDeadline || "",
       location: program.location || "",
       image: program.image || "",
       count: program.count || 0,
@@ -180,14 +175,14 @@ export default function AdminProgramsPage() {
       dataIndex: "date",
       key: "date",
       width: 140,
-      render: (value) => `${formatDate(value)} ${formatTime(value)}`,
+      render: (value) => formatDateTime(value),
     },
     {
       title: "Hạn đăng ký",
       dataIndex: "registrationDeadline",
       key: "registrationDeadline",
       width: 160,
-      render: (value) => (value ? formatDate(value, true) : "-"),
+      render: (value) => (value ? formatDateTime(value) : "-"),
     },
     {
       title: "Số lượng",
@@ -262,11 +257,12 @@ export default function AdminProgramsPage() {
             </Col>
             <Col xs={24} md={12} lg={8}>
               <Form.Item label="Ngày tổ chức" required>
-                <Input
-                  type="datetime-local"
-                  name="date"
-                  value={form.date}
-                  onChange={onChange}
+                <DatePicker
+                  style={{ width: '100%' }}
+                  showTime={{ format: 'HH:mm' }}
+                  format="DD/MM/YYYY HH:mm"
+                  value={form.date ? dayjs(form.date) : null}
+                  onChange={(date) => setForm((prev) => ({ ...prev, date: date ? date.toISOString() : '' }))}
                 />
               </Form.Item>
             </Col>
@@ -281,11 +277,12 @@ export default function AdminProgramsPage() {
             </Col>
             <Col xs={24} md={12} lg={8}>
               <Form.Item label="Hạn đăng ký">
-                <Input
-                  type="datetime-local"
-                  name="registrationDeadline"
-                  value={form.registrationDeadline}
-                  onChange={onChange}
+                <DatePicker
+                  style={{ width: '100%' }}
+                  showTime={{ format: 'HH:mm' }}
+                  format="DD/MM/YYYY HH:mm"
+                  value={form.registrationDeadline ? dayjs(form.registrationDeadline) : null}
+                  onChange={(date) => setForm((prev) => ({ ...prev, registrationDeadline: date ? date.toISOString() : '' }))}
                 />
               </Form.Item>
             </Col>

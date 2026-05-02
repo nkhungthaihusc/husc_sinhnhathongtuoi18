@@ -17,7 +17,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import PageTitle from "../../components/PageTitle.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
 import { programsApi, registersApi, studentsApi } from "../../services/api.js";
-import { formatDate, formatTime, getId, isProgramRegistrationOpen } from "../../utils/format.js";
+import { formatDateTime, getId, isProgramRegistrationOpen } from "../../utils/format.js";
 
 const BLOOD_GROUPS = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
 
@@ -189,7 +189,7 @@ export default function RegisterPage() {
                 <Select
                   value={form.bloodProgramId || undefined}
                   onChange={(value) => setForm((prev) => ({ ...prev, bloodProgramId: value || "" }))}
-                  options={selectablePrograms.map((item) => ({ label: `${item.name} - ${formatDate(item.date)} ${formatTime(item.date)}`, value: getId(item) }))}
+                  options={selectablePrograms.map((item) => ({ label: `${item.name} - ${formatDateTime(item.date)}`, value: getId(item) }))}
                 />
               </Form.Item>
             </Col>
@@ -198,6 +198,7 @@ export default function RegisterPage() {
               <Form.Item label="Lần hiến gần nhất">
                 <DatePicker
                   style={{ width: "100%" }}
+                  format="DD/MM/YYYY"
                   value={form.lastDateDonate ? dayjs(form.lastDateDonate) : null}
                   onChange={(date) =>
                     setForm((prev) => ({ ...prev, lastDateDonate: date ? date.format("YYYY-MM-DD") : "" }))

@@ -2,7 +2,7 @@ import { Alert, Card, Col, Empty, List, Row, Space, Typography } from "antd";
 import { useEffect, useState } from "react";
 import PageTitle from "../../components/PageTitle.jsx";
 import { notificationsApi } from "../../services/api.js";
-import { formatDate, getId } from "../../utils/format.js";
+import { formatDateTime, getId } from "../../utils/format.js";
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -50,7 +50,7 @@ export default function MemberNotificationsPage() {
                       border: selected ? "1px solid #fca5a5" : "1px solid transparent",
                     }}
                   >
-                    <List.Item.Meta title={item.title} description={<Text type="secondary">{formatDate(item.createdAt, true)}</Text>} />
+                    <List.Item.Meta title={item.title} description={<Text type="secondary">{formatDateTime(item.createdAt)}</Text>} />
                   </List.Item>
                 );
               }}
@@ -61,7 +61,7 @@ export default function MemberNotificationsPage() {
           <Card className="surface-card" style={{ minHeight: 280 }}>
             {current ? (
               <Space direction="vertical" size={12}>
-                <Text type="secondary">{formatDate(current.createdAt, true)}</Text>
+                <Text type="secondary">{formatDateTime(current.createdAt)}</Text>
                 <Title level={4} style={{ margin: 0, color: "#7f1d1d" }}>{current.title}</Title>
                 <Paragraph style={{ whiteSpace: "pre-wrap" }}>{current.content}</Paragraph>
                 {current.url ? <a href={current.url} target="_blank" rel="noreferrer">Mở liên kết</a> : null}

@@ -17,7 +17,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import PageTitle from '../../components/PageTitle.jsx';
 import StatusBadge from '../../components/StatusBadge.jsx';
 import { programsApi, registersApi } from '../../services/api.js';
-import { formatDate, formatTime, getId, mapRegisterStatus } from '../../utils/format.js';
+import { formatDate, formatDateTime, getId, mapRegisterStatus } from '../../utils/format.js';
 
 const { Text } = Typography;
 
@@ -175,7 +175,7 @@ export default function AdminRegistrationsPage() {
       key: 'createdAt',
       width: 170,
       responsive: ['lg'],
-      render: (value) => formatDate(value, true),
+      render: (value) => formatDateTime(value),
     },
     {
       title: 'Thao tác',
@@ -213,7 +213,7 @@ export default function AdminRegistrationsPage() {
               optionFilterProp="label"
               options={programs.map((item) => ({
                 value: getId(item),
-                label: `${item.name} - ${formatDate(item.date)} ${formatTime(item.date)}`,
+                label: `${item.name} - ${formatDateTime(item.date)}`,
               }))}
             />
             <Input.Search
@@ -235,7 +235,7 @@ export default function AdminRegistrationsPage() {
               background: '#f6ffed',
               borderColor: '#b7eb8f',
             }}
-            message={`Đang hiển thị danh sách đăng ký của sự kiện: ${selectedProgram.name} (${formatDate(selectedProgram.date)} ${formatTime(selectedProgram.date)})`}
+            message={`Đang hiển thị danh sách đăng ký của sự kiện: ${selectedProgram.name} (${formatDateTime(selectedProgram.date)})`}
           />
         ) : (
           <Alert

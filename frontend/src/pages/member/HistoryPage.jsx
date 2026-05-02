@@ -4,7 +4,7 @@ import PageTitle from '../../components/PageTitle.jsx';
 import StatusBadge from '../../components/StatusBadge.jsx';
 import { useAuth } from '../../hooks/useAuth.js';
 import { programsApi, registersApi } from '../../services/api.js';
-import { formatDate, getId, mapRegisterStatus } from '../../utils/format.js';
+import { formatDateTime, getId, mapRegisterStatus } from '../../utils/format.js';
 
 export default function MemberHistoryPage() {
   const { user } = useAuth();
@@ -93,7 +93,7 @@ export default function MemberHistoryPage() {
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 150,
-      render: (value) => formatDate(value, true),
+      render: (value) => formatDateTime(value),
     },
     {
       title: 'Thao tác',
@@ -137,7 +137,7 @@ export default function MemberHistoryPage() {
         </Col>
         <Col xs={24} md={8}>
           <Card className="surface-card">
-            <Statistic title="Cập nhật gần nhất" value={formatDate(latest?.updatedAt || latest?.createdAt, true)} />
+            <Statistic title="Cập nhật gần nhất" value={formatDateTime(latest?.updatedAt || latest?.createdAt)} />
           </Card>
         </Col>
       </Row>
@@ -185,7 +185,7 @@ export default function MemberHistoryPage() {
           <div><strong>Chương trình:</strong> {detailTarget ? (programMap[detailTarget.bloodProgramId]?.name || detailTarget.bloodProgramId || '-') : '-'}</div>
           <div><strong>Kết quả:</strong> {mapRegisterStatus(detailTarget?.result).label}</div>
           <div><strong>Lý do:</strong> {detailTarget?.reason || 'Không có lý do'}</div>
-          <div><strong>Ngày đăng ký:</strong> {formatDate(detailTarget?.createdAt, true)}</div>
+          <div><strong>Ngày đăng ký:</strong> {formatDateTime(detailTarget?.createdAt)}</div>
         </Space>
       </Modal>
     </div>

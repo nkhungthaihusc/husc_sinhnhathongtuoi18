@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   Col,
+  DatePicker,
   Form,
   Input,
   InputNumber,
@@ -15,6 +16,7 @@ import {
   Tag,
   Typography,
 } from 'antd';
+import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
 import PageTitle from '../../components/PageTitle.jsx';
 import { studentsApi, usersApi } from '../../services/api.js';
@@ -22,7 +24,7 @@ import { getId, formatUserStatus } from '../../utils/format.js';
 
 const { Text } = Typography;
 
-const toDateInputValue = (value) => {
+const toDatePickerValue = (value) => {
   if (!value) return '';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
@@ -215,8 +217,8 @@ export default function AdminMembersPage() {
       email: student.email || '',
       phone: student.phone || '',
       password: '',
-      birthDate: toDateInputValue(student.birthDate),
-      joinDate: toDateInputValue(student.joinDate),
+      birthDate: toDatePickerValue(student.birthDate),
+      joinDate: toDatePickerValue(student.joinDate),
       cccd: student.cccd || '',
       bloodGroup: student.bloodGroup || '',
       group: student.group || '',
@@ -357,8 +359,26 @@ export default function AdminMembersPage() {
             <Col xs={24} md={12} lg={8}><Form.Item label="Ngành"><Input name="category" value={form.category} onChange={onChange} /></Form.Item></Col>
             <Col xs={24} md={12} lg={8}><Form.Item label="Năm học"><InputNumber min={1} max={8} value={Number(form.yearStudy)} onChange={(value) => setForm((prev) => ({ ...prev, yearStudy: value || 1 }))} style={{ width: '100%' }} /></Form.Item></Col>
             <Col xs={24} md={12} lg={8}><Form.Item label="Chức vụ"><Input name="position" value={form.position} onChange={onChange} /></Form.Item></Col>
-            <Col xs={24} md={12} lg={8}><Form.Item label="Ngày sinh"><Input name="birthDate" value={form.birthDate} onChange={onChange} type="date" /></Form.Item></Col>
-            <Col xs={24} md={12} lg={8}><Form.Item label="Ngày vào CLB"><Input name="joinDate" value={form.joinDate} onChange={onChange} type="date" /></Form.Item></Col>
+            <Col xs={24} md={12} lg={8}>
+              <Form.Item label="Ngày sinh">
+                <DatePicker
+                  style={{ width: '100%' }}
+                  format="DD/MM/YYYY"
+                  value={form.birthDate ? dayjs(form.birthDate) : null}
+                  onChange={(date) => setForm((prev) => ({ ...prev, birthDate: date ? date.format('YYYY-MM-DD') : '' }))}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12} lg={8}>
+              <Form.Item label="Ngày vào CLB">
+                <DatePicker
+                  style={{ width: '100%' }}
+                  format="DD/MM/YYYY"
+                  value={form.joinDate ? dayjs(form.joinDate) : null}
+                  onChange={(date) => setForm((prev) => ({ ...prev, joinDate: date ? date.format('YYYY-MM-DD') : '' }))}
+                />
+              </Form.Item>
+            </Col>
             <Col xs={24} md={12} lg={8}><Form.Item label={editStudentId ? 'Mật khẩu mới' : 'Mật khẩu'}><Input.Password name="password" value={form.password} onChange={onChange} placeholder={editStudentId ? 'Không bắt buộc' : ''} /></Form.Item></Col>
             <Col xs={24} md={12} lg={8}>
               <Form.Item label="Vai trò tài khoản">

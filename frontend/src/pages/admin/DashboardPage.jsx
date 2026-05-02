@@ -3,7 +3,7 @@ import { Card, Col, Empty, Progress, Row, Space, Statistic, Table, Typography } 
 import { useEffect, useMemo, useState } from 'react';
 import PageTitle from '../../components/PageTitle.jsx';
 import { programsApi, registersApi, studentsApi } from '../../services/api.js';
-import { formatDate, formatTime, getId, mapRegisterStatus } from '../../utils/format.js';
+import { formatDateTime, getId, mapRegisterStatus } from '../../utils/format.js';
 
 const { Text } = Typography;
 
@@ -84,7 +84,7 @@ export default function AdminDashboardPage() {
         <Space direction="vertical" size={0}>
           <Text strong>{row.bloodProgramName || '-'}</Text>
           {row.bloodProgramDate && (
-            <Text type="secondary">{formatDate(row.bloodProgramDate)} {formatTime(row.bloodProgramDate)}</Text>
+            <Text type="secondary">{formatDateTime(row.bloodProgramDate)}</Text>
           )}
         </Space>
       ),
@@ -103,7 +103,7 @@ export default function AdminDashboardPage() {
       dataIndex: 'createdAt',
       key: 'createdAt',
       width: 180,
-      render: (value) => formatDate(value, true),
+      render: (value) => formatDateTime(value),
     },
   ];
 

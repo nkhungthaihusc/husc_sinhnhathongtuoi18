@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 import PageTitle from "../../components/PageTitle.jsx";
 import { registersApi } from "../../services/api.js";
 import StatusBadge from "../../components/StatusBadge.jsx";
-import { formatDate, getId, mapRegisterStatus } from "../../utils/format.js";
+import { formatDateTime, getId, mapRegisterStatus } from "../../utils/format.js";
 
 const LOOKUP_PAGE_SIZE = 10;
 
@@ -191,7 +191,7 @@ export default function LookupPage() {
                   return <StatusBadge tone={mapped.tone}>{mapped.label}</StatusBadge>;
                 },
               },
-              { title: "Ngày đăng ký", dataIndex: "createdAt", render: (value) => formatDate(value, true) },
+              { title: "Ngày đăng ký", dataIndex: "createdAt", render: (value) => formatDateTime(value) },
               {
                 title: "Thao tác",
                 key: "actions",

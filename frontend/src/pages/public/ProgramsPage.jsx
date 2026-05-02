@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import PageTitle from "../../components/PageTitle.jsx";
 import { programsApi } from "../../services/api.js";
-import { formatDate, formatTime, getId, isProgramRegistrationOpen, sortProgramsByRegistrationPriority } from "../../utils/format.js";
+import { formatDate, formatDateTime, getId, isProgramRegistrationOpen, sortProgramsByRegistrationPriority } from "../../utils/format.js";
 
 const { Paragraph, Text, Title } = Typography;
 const PROGRAMS_PER_PAGE = 9;
@@ -117,7 +117,7 @@ export default function ProgramsPage() {
                 >
                   <Space direction="vertical" size={8} className="program-card-content">
                     <Space wrap>
-                      <Tag color="red">{formatDate(program.date)} - {formatTime(program.date)}</Tag>
+                      <Tag color="red">{formatDateTime(program.date)}</Tag>
                       <Tag>{program.count ?? "-"} người dự kiến</Tag>
                       <Tag color={canRegister ? "green" : "volcano"}>
                         {canRegister ? "Còn hạn đăng ký" : "Hết hạn đăng ký"}
@@ -128,7 +128,7 @@ export default function ProgramsPage() {
                     </Title>
                     <Text type="secondary">Địa điểm: {program.location || "-"}</Text>
                     <Text type="secondary">
-                      Hạn đăng ký: {program.registrationDeadline ? formatDate(program.registrationDeadline, true) : "Không giới hạn"}
+                      Hạn đăng ký: {program.registrationDeadline ? formatDateTime(program.registrationDeadline) : "Không giới hạn"}
                     </Text>
                   </Space>
                 </Card>
@@ -186,7 +186,7 @@ export default function ProgramsPage() {
                 {isProgramRegistrationOpen(selectedProgram) ? "Còn hạn đăng ký" : "Hết hạn đăng ký"}
               </Tag>
               <Text type="secondary">
-                Hạn đăng ký: {selectedProgram.registrationDeadline ? formatDate(selectedProgram.registrationDeadline, true) : "Không giới hạn"}
+                Hạn đăng ký: {selectedProgram.registrationDeadline ? formatDateTime(selectedProgram.registrationDeadline) : "Không giới hạn"}
               </Text>
             </Space>
             <Card className="surface-card" bodyStyle={{ padding: 16 }}>
