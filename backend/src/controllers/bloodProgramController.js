@@ -1,5 +1,3 @@
-import mongoose from "mongoose";
-
 import BloodProgram from "../models/bloodProgram.js";
 import BloodRegister from "../models/bloodRegister.js";
 import { convertObjectDatesToUTC7 } from "../utils/timezoneHelper.js";
@@ -54,27 +52,27 @@ class BloodProgramController {
   getBloodProgramStatistic = async (req, res) => {
   try {
     const { id } = req.params;
-    const programObjectId = new mongoose.Types.ObjectId(id);
 
     const stats = await BloodRegister.aggregate([
-      { $match: { bloodProgramId: programObjectId } },
+      { $match: { bloodProgramId: id } },
       {
         $facet: {
           // Nhóm 1: Tính các con số tổng quát
           overall: [
             {
               $group: {
-                _id: programObjectId,
+                _id: id,
                 total: { $sum: 1 },
-                success: { $sum: { $cond: [{ $eq: ["$result", "success"] }, 1, 0] } },
-                reject: { $sum: { $cond: [{ $eq: ["$result", "reject"] }, 1, 0] } },
+                approved: { $sum: { $cond: [{ $eq: ["$result", "approved"] }, 1, 0] } },
+                rejected: { $sum: { $cond: [{ $eq: ["$result", "rejected"] }, 1, 0] } },
+                cancelled: { $sum: { $cond: [{ $eq: ["$result", "cancelled"] }, 1, 0] } },
                 pending: { $sum: { $cond: [{ $eq: ["$result", "pending"] }, 1, 0] } }
               }
             }
           ],
           // Nhóm 2: Thống kê theo nhóm máu
           bloodGroups: [
-            { $match: { result: "success" } }, // Chỉ đếm nhóm máu của những ca thành công
+            { $match: { result: "approved" } }, // Chỉ đếm nhóm máu của những ca thành công
             { $group: { _id: "$bloodGroup", count: { $sum: 1 } } },
             { $sort: { _id: 1 } }
           ]
@@ -82,9 +80,19 @@ class BloodProgramController {
       }
     ]);
 
+    const summary = stats[0].overall[0] || { total: 0, approved: 0, rejected: 0, cancelled: 0, pending: 0 };
+    const successfulRate = summary.total ? Math.round((summary.approved / summary.total) * 100) : 0;
+    const rejectedRate = summary.total ? Math.round((summary.rejected / summary.total) * 100) : 0;
+    const cancelledRate = summary.total ? Math.round((summary.cancelled / summary.total) * 100) : 0;
+
     // Format lại dữ liệu cho đẹp để Front-end dễ dùng
     const result = {
-      summary: stats[0].overall[0] || { total: 0, success: 0, reject: 0, pending: 0 },
+      summary: {
+        ...summary,
+        successfulRate,
+        rejectedRate,
+        cancelledRate,
+      },
       bloodDetails: stats[0].bloodGroups
     };
 

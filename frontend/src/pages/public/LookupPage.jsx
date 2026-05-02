@@ -16,8 +16,8 @@ import {
 } from "antd";
 import { useEffect, useState } from "react";
 import PageTitle from "../../components/PageTitle.jsx";
-import StatusBadge from "../../components/StatusBadge.jsx";
 import { registersApi } from "../../services/api.js";
+import StatusBadge from "../../components/StatusBadge.jsx";
 import { formatDate, getId, mapRegisterStatus } from "../../utils/format.js";
 
 const LOOKUP_PAGE_SIZE = 10;
@@ -33,14 +33,15 @@ export default function LookupPage() {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailTarget, setDetailTarget] = useState(null);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ page: 1, limit: LOOKUP_PAGE_SIZE, totalItems: 0, totalPages: 1 });
   const [summary, setSummary] = useState({ TongSoLanHien: 0 });
 
   const canCancelRegister = (row) => {
-    const status = String(row?.status || '').toLowerCase();
     const result = String(row?.result || '').toLowerCase();
-    return !['cancel', 'success', 'reject'].includes(result) && !['cancelled', 'rejected'].includes(status);
+    return !['cancelled', 'approved', 'rejected'].includes(result);
   };
 
   const refreshLookup = async (keyword, currentPage) => {
@@ -132,6 +133,11 @@ export default function LookupPage() {
     setCancelModalOpen(true);
   };
 
+  const onOpenDetailModal = (row) => {
+    setDetailTarget(row);
+    setDetailOpen(true);
+  };
+
   return (
     <Space direction="vertical" size={20} style={{ width: "100%" }}>
       <PageTitle
@@ -162,7 +168,7 @@ export default function LookupPage() {
           <Card className="surface-card stat-card"><Statistic title="Đã hiến thành công" value={summary.TongSoLanHien} /></Card>
         </Col>
         <Col xs={24} md={8}>
-          <Card className="surface-card stat-card"><Statistic title="Từ khóa" value={query || "-"} /></Card>
+          <Card className="surface-card stat-card"><Statistic title="Từ khóa" value={query || "-"} formatter={(value) => String(value)} /></Card>
         </Col>
       </Row>
       {notice ? <Alert type="success" showIcon message={notice} /> : null}
@@ -178,28 +184,30 @@ export default function LookupPage() {
               { title: "Người đăng ký", dataIndex: "name", render: (value) => value || "-" },
               { title: "MSSV", dataIndex: "studentId", render: (value) => value || "-" },
               {
-                title: "Trạng thái",
-                dataIndex: "status",
-                render: (status) => {
-                  const mapped = mapRegisterStatus(status);
+                title: "Kết quả",
+                dataIndex: "result",
+                render: (result) => {
+                  const mapped = mapRegisterStatus(result);
                   return <StatusBadge tone={mapped.tone}>{mapped.label}</StatusBadge>;
                 },
               },
-              { title: "Kết quả", dataIndex: "result", render: (value) => value || "-" },
               { title: "Ngày đăng ký", dataIndex: "createdAt", render: (value) => formatDate(value, true) },
               {
                 title: "Thao tác",
                 key: "actions",
-                width: 140,
+                width: 220,
                 render: (_, row) => {
-                  if (!canCancelRegister(row)) {
-                    return "-";
-                  }
-
                   return (
-                    <Button size="small" danger onClick={() => onOpenCancelModal(row)}>
-                      Hủy
-                    </Button>
+                    <Space size={8}>
+                      <Button size="small" onClick={() => onOpenDetailModal(row)}>
+                        Chi tiết
+                      </Button>
+                      {canCancelRegister(row) ? (
+                        <Button size="small" danger onClick={() => onOpenCancelModal(row)}>
+                          Hủy
+                        </Button>
+                      ) : null}
+                    </Space>
                   );
                 },
               },
@@ -253,6 +261,33 @@ export default function LookupPage() {
             maxLength={300}
             showCount
           />
+        </Space>
+      </Modal>
+
+      <Modal
+        title="Chi tiết đăng ký"
+        open={detailOpen}
+        onCancel={() => {
+          setDetailOpen(false);
+          setDetailTarget(null);
+        }}
+        footer={[
+          <Button
+            key="close"
+            onClick={() => {
+              setDetailOpen(false);
+              setDetailTarget(null);
+            }}
+          >
+            Đóng
+          </Button>,
+        ]}
+      >
+        <Space direction="vertical" size={10} style={{ width: "100%" }}>
+          <div><strong>Người đăng ký:</strong> {detailTarget?.name || "-"}</div>
+          <div><strong>MSSV:</strong> {detailTarget?.studentId || "-"}</div>
+          <div><strong>Kết quả:</strong> {mapRegisterStatus(detailTarget?.result).label}</div>
+          <div><strong>Lý do:</strong> {detailTarget?.reason || "Không có lý do"}</div>
         </Space>
       </Modal>
     </Space>

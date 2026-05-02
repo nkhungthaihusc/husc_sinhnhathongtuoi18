@@ -1,5 +1,12 @@
 import moment from 'moment-timezone';
 
+const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+const parseDateOnlyToUTC = (value) => {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+};
+
 /**
  * Convert a date to UTC+7 timezone
  * @param {Date|string} date - The date to convert
@@ -7,6 +14,11 @@ import moment from 'moment-timezone';
  */
 export const convertToUTC7 = (date) => {
   if (!date) return date;
+
+  // Keep date-only values stable across timezones (avoid shifting to previous day).
+  if (typeof date === 'string' && DATE_ONLY_REGEX.test(date)) {
+    return parseDateOnlyToUTC(date);
+  }
   
   const momentDate = moment(date).tz('Asia/Ho_Chi_Minh');
   return momentDate.toDate();

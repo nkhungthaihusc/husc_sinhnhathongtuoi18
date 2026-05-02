@@ -48,7 +48,7 @@ export default function LoginPage() {
             Đăng nhập hệ thống
           </Title>
           <Paragraph type="secondary" style={{ marginBottom: 8 }}>
-            Sử dụng tài khoản được backend cấp để truy cập phần member/admin.
+            Sử dụng tài khoản được cung cấp để đăng nhập. Liên hệ admin nếu bạn chưa có tài khoản hoặc gặp sự cố.
           </Paragraph>
           <Form layout="vertical" onSubmitCapture={onSubmit}>
             <Form.Item label="Tên đăng nhập" required>

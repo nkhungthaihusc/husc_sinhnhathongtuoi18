@@ -140,7 +140,7 @@ export default function RegisterPage() {
     <Space direction="vertical" size={20} style={{ width: "100%" }}>
       <PageTitle
         title="Đăng ký hiến máu"
-        description="Điền thông tin chính xác để CLB xác nhận nhanh. Biểu mẫu này kết nối trực tiếp endpoint /blood-registers."
+        description="Điền thông tin chính xác để CLB xác nhận nhanh. Chọn đúng chương trình bạn muốn tham gia để tránh nhầm lẫn."
       />
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8}><Card className="surface-card"><Typography.Text strong>1. Điền biểu mẫu</Typography.Text><div>Nhập đủ thông tin và chọn chương trình phù hợp.</div></Card></Col>

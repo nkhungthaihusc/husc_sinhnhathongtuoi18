@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import PageTitle from "../../components/PageTitle.jsx";
 import { programsApi } from "../../services/api.js";
-import { formatDate, formatTime, getId, isProgramRegistrationOpen } from "../../utils/format.js";
+import { formatDate, formatTime, getId, isProgramRegistrationOpen, sortProgramsByRegistrationPriority } from "../../utils/format.js";
 
 const { Paragraph, Text, Title } = Typography;
 const PROGRAMS_PER_PAGE = 9;
@@ -31,19 +31,7 @@ export default function ProgramsPage() {
           : await programsApi.getAllPaginated({ page, limit: PROGRAMS_PER_PAGE });
 
         let items = Array.isArray(response?.data) ? response.data : [];
-        // --- BẮT ĐẦU LOGIC SẮP XẾP ---
-      const now = new Date().getTime();
-      items = items.sort((a, b) => {
-        const timeA = new Date(a.date).getTime();
-        const timeB = new Date(b.date).getTime();
-        
-        // Tính toán khoảng cách tuyệt đối đến thời điểm hiện tại
-        const diffA = Math.abs(timeA - now);
-        const diffB = Math.abs(timeB - now);
-        
-        return diffA - diffB; // Khoảng cách nhỏ nhất (gần nhất) lên đầu
-      });
-      console.log("Danh sách chương trình sau khi sắp xếp:", items);
+        items = sortProgramsByRegistrationPriority(items);
         setPrograms(items);
         setPagination(
           response?.pagination || {

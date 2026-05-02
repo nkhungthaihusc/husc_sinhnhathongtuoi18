@@ -32,15 +32,16 @@ class BloodRegisterController {
             $group: {
               _id: null,
               total: { $sum: 1 },
-              approved: { $sum: { $cond: [{ $eq: ["$result", "success"] }, 1, 0] } },
-              rejected: { $sum: { $cond: [{ $eq: ["$result", "reject"] }, 1, 0] } },
+              approved: { $sum: { $cond: [{ $eq: ["$result", "approved"] }, 1, 0] } },
+              rejected: { $sum: { $cond: [{ $eq: ["$result", "rejected"] }, 1, 0] } },
+              cancelled: { $sum: { $cond: [{ $eq: ["$result", "cancelled"] }, 1, 0] } },
               pending: { $sum: { $cond: [{ $eq: ["$result", "pending"] }, 1, 0] } },
             },
           },
         ]),
       ]);
 
-      const summaryStats = summary?.[0] || { total: 0, approved: 0, rejected: 0, pending: 0 };
+      const summaryStats = summary?.[0] || { total: 0, approved: 0, rejected: 0, cancelled: 0, pending: 0 };
       const totalPages = Math.max(1, Math.ceil(summaryStats.total / limit));
 
       return res.status(200).json({
@@ -49,6 +50,7 @@ class BloodRegisterController {
           total: summaryStats.total,
           approved: summaryStats.approved,
           rejected: summaryStats.rejected,
+          cancelled: summaryStats.cancelled,
           pending: summaryStats.pending,
         },
         pagination: {
@@ -77,11 +79,15 @@ class BloodRegisterController {
       console.log("bloodProgramId:", bloodProgramId);
       const bloodRegisters = await BloodRegister.find({ bloodProgramId: bloodProgramId }).sort({ createdAt: -1 });
       const total = bloodRegisters.length;
-      const approved = bloodRegisters.filter(register => register.result === "success").length;
-      const rejected = bloodRegisters.filter(register => register.result === "reject").length;
+      const approved = bloodRegisters.filter(register => register.result === "approved").length;
+      const rejected = bloodRegisters.filter(register => register.result === "rejected").length;
+      const cancelled = bloodRegisters.filter(register => register.result === "cancelled").length;
       const pending = bloodRegisters.filter(register => register.result === "pending").length;
+      const successfulRate = total ? Math.round((approved / total) * 100) : 0;
+      const rejectedRate = total ? Math.round((rejected / total) * 100) : 0;
+      const cancelledRate = total ? Math.round((cancelled / total) * 100) : 0;
       return res.status(200).json({
-        data: { bloodRegisters, total, approved, rejected, pending },
+        data: { bloodRegisters, total, approved, rejected, cancelled, pending, successfulRate, rejectedRate, cancelledRate },
         code: 200,
         message: "Lấy danh sách đăng ký hiến máu theo chương trình thành công",
       });
@@ -128,9 +134,10 @@ class BloodRegisterController {
               {
                 $group: {
                   _id: null,
-                  TongSoLanHien: { $sum: { $cond: [{ $eq: ["$result", "success"] }, 1, 0] } },
-                  approved: { $sum: { $cond: [{ $eq: ["$result", "success"] }, 1, 0] } },
-                  rejected: { $sum: { $cond: [{ $eq: ["$result", "reject"] }, 1, 0] } },
+                  TongSoLanHien: { $sum: { $cond: [{ $eq: ["$result", "approved"] }, 1, 0] } },
+                  approved: { $sum: { $cond: [{ $eq: ["$result", "approved"] }, 1, 0] } },
+                  rejected: { $sum: { $cond: [{ $eq: ["$result", "rejected"] }, 1, 0] } },
+                  cancelled: { $sum: { $cond: [{ $eq: ["$result", "cancelled"] }, 1, 0] } },
                   pending: { $sum: { $cond: [{ $eq: ["$result", "pending"] }, 1, 0] } },
                   LanHienDangKyGanNhat: { $first: "$createdAt" },
                   KetQuaLanDangKyGanNhat: { $first: "$result" },
@@ -147,6 +154,7 @@ class BloodRegisterController {
         TongSoLanHien: 0,
         approved: 0,
         rejected: 0,
+        cancelled: 0,
         pending: 0,
         LanHienDangKyGanNhat: null,
         KetQuaLanDangKyGanNhat: null,
@@ -163,6 +171,7 @@ class BloodRegisterController {
             total: 0,
             approved: 0,
             rejected: 0,
+            cancelled: 0,
             pending: 0,
           },
           code: 200,
@@ -188,6 +197,7 @@ class BloodRegisterController {
           total: totalItems,
           approved: summary.approved,
           rejected: summary.rejected,
+          cancelled: summary.cancelled,
           pending: summary.pending,
         },
         code: 200,
@@ -305,8 +315,7 @@ class BloodRegisterController {
       const canceledBloodRegister = await BloodRegister.findByIdAndUpdate(
         id,
         {
-          status: "cancelled",
-          result: "reject",
+          result: "cancelled",
           reason: reason || "Người dùng tự hủy đăng ký",
         },
         { new: true },

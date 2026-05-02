@@ -18,9 +18,19 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import PageTitle from '../../components/PageTitle.jsx';
 import { studentsApi, usersApi } from '../../services/api.js';
-import { getId } from '../../utils/format.js';
+import { getId, formatUserStatus } from '../../utils/format.js';
 
 const { Text } = Typography;
+
+const toDateInputValue = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const initialForm = {
   studentId: '',
@@ -46,6 +56,7 @@ export default function AdminMembersPage() {
   const [editUserId, setEditUserId] = useState('');
   const [editStudentId, setEditStudentId] = useState('');
   const [form, setForm] = useState(initialForm);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
 
@@ -90,18 +101,61 @@ export default function AdminMembersPage() {
   const onChange = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    validateField(name, value);
   };
+
+  const validateField = (fieldName, value) => {
+    const others = editStudentId 
+      ? students.filter(s => getId(s) !== editStudentId)
+      : students;
+    
+    let err = null;
+    
+    if (fieldName === 'studentId' && value) {
+      if (others.some(s => s.studentId === value)) {
+        err = 'MSSV này đã tồn tại';
+      }
+    }
+    if (fieldName === 'email' && value) {
+      if (others.some(s => s.email === value)) {
+        err = 'Email này đã được sử dụng';
+      }
+    }
+    if (fieldName === 'phone' && value) {
+      if (others.some(s => s.phone === value)) {
+        err = 'Số điện thoại này đã được sử dụng';
+      }
+    }
+    if (fieldName === 'cccd' && value) {
+      if (others.some(s => s.cccd === value)) {
+        err = 'CCCD này đã được sử dụng';
+      }
+    }
+    
+    setFieldErrors((prev) => ({
+      ...prev,
+      [fieldName]: err
+    }));
+  };
+
+  const hasErrors = useMemo(() => Object.values(fieldErrors).some(err => err), [fieldErrors]);
 
   const resetForm = () => {
     setEditUserId('');
     setEditStudentId('');
     setForm(initialForm);
+    setFieldErrors({});
   };
 
   const onSubmit = async (event) => {
     event.preventDefault();
     setError('');
     setNotice('');
+    
+    if (hasErrors) {
+      setError('Vui lòng sửa các lỗi trước khi lưu');
+      return;
+    }
 
     try {
       if (editStudentId) {
@@ -109,6 +163,7 @@ export default function AdminMembersPage() {
           name: form.name,
           phone: form.phone,
           email: form.email,
+          birthDate: form.birthDate || undefined,
           cccd: form.cccd,
           bloodGroup: form.bloodGroup,
           group: form.group,
@@ -153,14 +208,15 @@ export default function AdminMembersPage() {
   const onEdit = ({ student, user }) => {
     setEditUserId(user ? getId(user) : '');
     setEditStudentId(getId(student));
+    setFieldErrors({});
     setForm({
       studentId: student.studentId || '',
       name: student.name || '',
       email: student.email || '',
       phone: student.phone || '',
       password: '',
-      birthDate: student.birthDate ? String(student.birthDate).slice(0, 10) : '',
-      joinDate: student.joinDate ? String(student.joinDate).slice(0, 10) : '',
+      birthDate: toDateInputValue(student.birthDate),
+      joinDate: toDateInputValue(student.joinDate),
       cccd: student.cccd || '',
       bloodGroup: student.bloodGroup || '',
       group: student.group || '',
@@ -222,7 +278,7 @@ export default function AdminMembersPage() {
       title: 'Trạng thái',
       key: 'status',
       width: 120,
-      render: (_, row) => <Tag color={row.user?.status === 'active' ? 'success' : 'red'}>{row.user?.status || '-'}</Tag>,
+      render: (_, row) => <Tag color={row.user?.status === 'active' ? 'success' : 'red'}>{formatUserStatus(row.user?.status) || '-'}</Tag>,
     },
     {
       title: 'Thao tác',
@@ -277,12 +333,27 @@ export default function AdminMembersPage() {
         <Form layout="vertical" onSubmitCapture={onSubmit}>
           <Row gutter={12}>
             <Col xs={24} md={12} lg={8}><Form.Item label="Họ tên" required><Input name="name" value={form.name} onChange={onChange} /></Form.Item></Col>
-            <Col xs={24} md={12} lg={8}><Form.Item label="MSSV" required><Input name="studentId" value={form.studentId} onChange={onChange} disabled={Boolean(editStudentId)} /></Form.Item></Col>
-            <Col xs={24} md={12} lg={8}><Form.Item label="Email" required><Input name="email" value={form.email} onChange={onChange} type="email" /></Form.Item></Col>
-            <Col xs={24} md={12} lg={8}><Form.Item label="Số điện thoại" required><Input name="phone" value={form.phone} onChange={onChange} /></Form.Item></Col>
-            <Col xs={24} md={12} lg={8}><Form.Item label="CCCD" required><Input name="cccd" value={form.cccd} onChange={onChange} /></Form.Item></Col>
+            <Col xs={24} md={12} lg={8}><Form.Item label="MSSV" required validateStatus={fieldErrors.studentId ? "error" : ""} help={fieldErrors.studentId}><Input name="studentId" value={form.studentId} onChange={onChange} disabled={Boolean(editStudentId)} /></Form.Item></Col>
+            <Col xs={24} md={12} lg={8}><Form.Item label="Email" required validateStatus={fieldErrors.email ? "error" : ""} help={fieldErrors.email}><Input name="email" value={form.email} onChange={onChange} type="email" /></Form.Item></Col>
+            <Col xs={24} md={12} lg={8}><Form.Item label="Số điện thoại" required validateStatus={fieldErrors.phone ? "error" : ""} help={fieldErrors.phone}><Input name="phone" value={form.phone} onChange={onChange} /></Form.Item></Col>
+            <Col xs={24} md={12} lg={8}><Form.Item label="CCCD" required validateStatus={fieldErrors.cccd ? "error" : ""} help={fieldErrors.cccd}><Input name="cccd" value={form.cccd} onChange={onChange} /></Form.Item></Col>
             <Col xs={24} md={12} lg={8}><Form.Item label="Nhóm máu"><Input name="bloodGroup" value={form.bloodGroup} onChange={onChange} /></Form.Item></Col>
-            <Col xs={24} md={12} lg={8}><Form.Item label="Thuộc ban"><Input name="group" value={form.group} onChange={onChange} /></Form.Item></Col>
+            <Col xs={24} md={12} lg={8}>
+              <Form.Item label="Thuộc ban">
+                <Select
+                  value={form.group || undefined}
+                  onChange={(value) => setForm((prev) => ({ ...prev, group: value || '' }))}
+                  allowClear
+                  placeholder="Chọn ban"
+                  options={[
+                    { label: 'Ban kỹ năng', value: 'Ban kỹ năng' },
+                    { label: 'Ban hậu cần', value: 'Ban hậu cần' },
+                    { label: 'Ban chủ nhiệm', value: 'Ban chủ nhiệm' },
+                    { label: 'Ban truyền thông', value: 'Ban truyền thông' },
+                  ]}
+                />
+              </Form.Item>
+            </Col>
             <Col xs={24} md={12} lg={8}><Form.Item label="Ngành"><Input name="category" value={form.category} onChange={onChange} /></Form.Item></Col>
             <Col xs={24} md={12} lg={8}><Form.Item label="Năm học"><InputNumber min={1} max={8} value={Number(form.yearStudy)} onChange={(value) => setForm((prev) => ({ ...prev, yearStudy: value || 1 }))} style={{ width: '100%' }} /></Form.Item></Col>
             <Col xs={24} md={12} lg={8}><Form.Item label="Chức vụ"><Input name="position" value={form.position} onChange={onChange} /></Form.Item></Col>
@@ -296,7 +367,7 @@ export default function AdminMembersPage() {
             </Col>
             <Col span={24}>
               <Space wrap>
-                <Button type="primary" htmlType="submit">{editStudentId ? 'Lưu cập nhật' : 'Thêm thành viên'}</Button>
+                <Button type="primary" htmlType="submit" disabled={hasErrors}>{editStudentId ? 'Lưu cập nhật' : 'Thêm thành viên'}</Button>
                 {editStudentId ? <Button onClick={resetForm}>Hủy sửa</Button> : null}
               </Space>
             </Col>

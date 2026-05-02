@@ -53,7 +53,7 @@ export default function AppRouter() {
       </Route>
 
       <Route element={<ProtectedRoute roles={['member']} />}>
-        <Route path="/member" element={<PanelLayout title="Khu vực thành viên" links={memberLinks} />}>
+        <Route path="/member" element={<PanelLayout title="Thành viên" links={memberLinks} />}>
           <Route index element={<Navigate to="/member/dashboard" replace />} />
           <Route path="dashboard" element={<MemberDashboardPage />} />
           <Route path="profile" element={<MemberProfilePage />} />

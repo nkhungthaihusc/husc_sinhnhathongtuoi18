@@ -10,6 +10,7 @@ import authRoute from './routes/authRoutes.js';
 import Nrouter from './routes/notificationRoute.js';
 import bloodProgramRoute from './routes/bloodProgramRoute.js';
 import bloodRegisterRoute from './routes/bloodRegisterRoute.js';
+import { swaggerUi, swaggerSpec } from './swagger.js';
 
 
 
@@ -17,6 +18,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();      
+// Endpoint phục vụ giao diện Swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 console.log(__dirname);
 

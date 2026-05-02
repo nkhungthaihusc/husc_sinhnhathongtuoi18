@@ -31,7 +31,10 @@ class studentController {
             const dateFields = ['birthDate', 'joinDate'];
             updateData = convertObjectDatesToUTC7(updateData, dateFields);
             
-            const updatedStudent = await Student.findByIdAndUpdate(id, updateData, { new: true });
+            const updatedStudent = await Student.findByIdAndUpdate(id, updateData, {
+                new: true,
+                runValidators: true,
+            });
             if (!updatedStudent) {
                 return res.status(404).json({
                     code: 404,

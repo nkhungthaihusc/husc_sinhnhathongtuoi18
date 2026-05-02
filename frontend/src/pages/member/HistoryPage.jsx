@@ -1,4 +1,4 @@
-import { Alert, Card, Col, Empty, Row, Space, Statistic, Table, Tag } from 'antd';
+import { Alert, Button, Card, Col, Empty, Modal, Row, Space, Statistic, Table } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 import PageTitle from '../../components/PageTitle.jsx';
 import StatusBadge from '../../components/StatusBadge.jsx';
@@ -10,7 +10,10 @@ export default function MemberHistoryPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState([]);
   const [programMap, setProgramMap] = useState({});
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailTarget, setDetailTarget] = useState(null);
   const [error, setError] = useState('');
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -20,8 +23,7 @@ export default function MemberHistoryPage() {
           programsApi.getAllPaginated({ page: 1, limit: 100 }),
         ]);
         const mine = registerData?.listBloodRegisters;
-        console.log("Lịch sử hiến máu của bạn:",  user?.studentId, mine);
-        setRows(mine);
+        setRows(Array.isArray(mine) ? mine : []);
         const mapped = Object.fromEntries((programData?.data || []).map((program) => [getId(program), program]));
         setProgramMap(mapped);
       } catch (e) {
@@ -31,8 +33,38 @@ export default function MemberHistoryPage() {
     load();
   }, [user?.studentId]);
 
+  const load = async () => {
+    try {
+      const [registerData, programData] = await Promise.all([
+        registersApi.search(user?.studentId),
+        programsApi.getAllPaginated({ page: 1, limit: 100 }),
+      ]);
+      const mine = registerData?.listBloodRegisters;
+      setRows(Array.isArray(mine) ? mine : []);
+      const mapped = Object.fromEntries((programData?.data || []).map((program) => [getId(program), program]));
+      setProgramMap(mapped);
+    } catch (e) {
+      setError(e?.response?.data?.message || 'Không tải được lịch sử hiến máu');
+    }
+  };
+
+  const onCancelRegistration = async (registerId) => {
+    setCancelLoading(true);
+    setError('');
+    try {
+      await registersApi.update(registerId, { result: 'cancelled', reason: 'Người dùng hủy' });
+      await load();
+      setDetailOpen(false);
+      setDetailTarget(null);
+    } catch (e) {
+      setError(e?.response?.data?.message || 'Không thể hủy đơn đăng ký');
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
   const donatedCount = useMemo(
-    () => rows.filter((item) => String(item.result || '').toLowerCase() === 'success').length,
+    () => rows.filter((item) => String(item.result || '').toLowerCase() === 'approved').length,
     [rows],
   );
 
@@ -48,20 +80,13 @@ export default function MemberHistoryPage() {
       render: (_, row) => programMap[row.bloodProgramId]?.name || row.bloodProgramId || '-',
     },
     {
-      title: 'Trạng thái',
-      key: 'status',
+      title: 'Kết quả',
+      key: 'result',
       width: 140,
       render: (_, row) => {
-        const status = mapRegisterStatus(row.status);
+        const status = mapRegisterStatus(row.result);
         return <StatusBadge tone={status.tone}>{status.label}</StatusBadge>;
       },
-    },
-    {
-      title: 'Kết quả',
-      dataIndex: 'result',
-      key: 'result',
-      width: 120,
-      render: (value) => <Tag>{value || '-'}</Tag>,
     },
     {
       title: 'Ngày đăng ký',
@@ -69,6 +94,29 @@ export default function MemberHistoryPage() {
       key: 'createdAt',
       width: 150,
       render: (value) => formatDate(value, true),
+    },
+    {
+      title: 'Thao tác',
+      key: 'actions',
+      width: 140,
+      render: (_, row) => (
+        <Space wrap>
+          <Button
+            size="small"
+            onClick={() => {
+              setDetailTarget(row);
+              setDetailOpen(true);
+            }}
+          >
+            Chi tiết
+          </Button>
+          {String(row.result || '').toLowerCase() === 'pending' && (
+            <Button size="small" danger onClick={() => onCancelRegistration(getId(row))} loading={cancelLoading}>
+              Hủy
+            </Button>
+          )}
+        </Space>
+      ),
     },
   ];
 
@@ -84,7 +132,7 @@ export default function MemberHistoryPage() {
         </Col>
         <Col xs={24} md={8}>
           <Card className="surface-card">
-            <Statistic title="Đã hiến thành công" value={donatedCount} />
+            <Statistic title="Đơn thành công" value={donatedCount} />
           </Card>
         </Col>
         <Col xs={24} md={8}>
@@ -108,6 +156,38 @@ export default function MemberHistoryPage() {
           />
         </Space>
       </Card>
+
+      <Modal
+        title="Chi tiết đăng ký"
+        open={detailOpen}
+        onCancel={() => {
+          setDetailOpen(false);
+          setDetailTarget(null);
+        }}
+        footer={[
+          String(detailTarget?.result || '').toLowerCase() === 'pending' ? (
+            <Button key="cancel" danger onClick={() => onCancelRegistration(getId(detailTarget))} loading={cancelLoading}>
+              Hủy đơn
+            </Button>
+          ) : null,
+          <Button
+            key="close"
+            onClick={() => {
+              setDetailOpen(false);
+              setDetailTarget(null);
+            }}
+          >
+            Đóng
+          </Button>,
+        ]}
+      >
+        <Space direction="vertical" size={10} style={{ width: '100%' }}>
+          <div><strong>Chương trình:</strong> {detailTarget ? (programMap[detailTarget.bloodProgramId]?.name || detailTarget.bloodProgramId || '-') : '-'}</div>
+          <div><strong>Kết quả:</strong> {mapRegisterStatus(detailTarget?.result).label}</div>
+          <div><strong>Lý do:</strong> {detailTarget?.reason || 'Không có lý do'}</div>
+          <div><strong>Ngày đăng ký:</strong> {formatDate(detailTarget?.createdAt, true)}</div>
+        </Space>
+      </Modal>
     </div>
   );
 }

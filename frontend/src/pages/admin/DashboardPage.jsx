@@ -3,7 +3,7 @@ import { Card, Col, Empty, Progress, Row, Space, Statistic, Table, Typography } 
 import { useEffect, useMemo, useState } from 'react';
 import PageTitle from '../../components/PageTitle.jsx';
 import { programsApi, registersApi, studentsApi } from '../../services/api.js';
-import { formatDate, formatTime, getId } from '../../utils/format.js';
+import { formatDate, formatTime, getId, mapRegisterStatus } from '../../utils/format.js';
 
 const { Text } = Typography;
 
@@ -38,7 +38,7 @@ export default function AdminDashboardPage() {
 
   const approvedRate = useMemo(() => {
     if (!registers.length) return 0;
-    const approved = registers.filter((item) => String(item.status || '').toLowerCase() === 'approved').length;
+    const approved = registers.filter((item) => String(item.result || '').toLowerCase() === 'approved').length;
     return Math.round((approved / registers.length) * 100);
   }, [registers]);
 
@@ -90,10 +90,13 @@ export default function AdminDashboardPage() {
       ),
     },
     {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (value) => <Text style={{ textTransform: 'capitalize' }}>{value || 'pending'}</Text>,
+      title: 'Kết quả',
+      dataIndex: 'result',
+      key: 'result',
+      render: (value) => {
+        const status = mapRegisterStatus(value);
+        return <Text>{status.label}</Text>;
+      },
     },
     {
       title: 'Ngày tạo',

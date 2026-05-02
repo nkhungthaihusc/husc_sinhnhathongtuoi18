@@ -108,7 +108,7 @@ export default function PanelLayout({ title, links }) {
                 letterSpacing: "0.02em",
               }}
             >
-              ADMIN PANEL
+              PANEL
             </Text>
             <Title level={4} style={{ margin: 0, color: "#7f1d1d" }}>
               {title}

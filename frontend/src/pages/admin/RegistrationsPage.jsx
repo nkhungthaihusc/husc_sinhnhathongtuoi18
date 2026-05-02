@@ -11,7 +11,6 @@ import {
   Space,
   Statistic,
   Table,
-  Tag,
   Typography,
 } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -28,7 +27,7 @@ export default function AdminRegistrationsPage() {
   const [programMap, setProgramMap] = useState({});
   const [selectedProgramId, setSelectedProgramId] = useState('');
   const [editingId, setEditingId] = useState('');
-  const [payload, setPayload] = useState({ status: 'pending', result: 'pending', reason: '' });
+  const [payload, setPayload] = useState({ result: 'pending', reason: '' });
   const [search, setSearch] = useState('');
   const [tableLoading, setTableLoading] = useState(false);
   const [notice, setNotice] = useState('');
@@ -100,21 +99,20 @@ export default function AdminRegistrationsPage() {
 
   const stats = useMemo(() => {
     const total = rows.length;
-    const approved = rows.filter((item) => String(item.status || '').toLowerCase() === 'approved').length;
-    const rejected = rows.filter((item) => String(item.status || '').toLowerCase() === 'rejected').length;
-    const success = rows.filter((item) => String(item.result || '').toLowerCase() === 'success').length;
+    const approved = rows.filter((item) => String(item.result || '').toLowerCase() === 'approved').length;
+    const rejected = rows.filter((item) => String(item.result || '').toLowerCase() === 'rejected').length;
+    const cancelled = rows.filter((item) => String(item.result || '').toLowerCase() === 'cancelled').length;
     return {
       total,
-      approvedRate: total ? Math.round((approved / total) * 100) : 0,
+      successRate: total ? Math.round((approved / total) * 100) : 0,
       rejectedRate: total ? Math.round((rejected / total) * 100) : 0,
-      success,
+      cancelledRate: total ? Math.round((cancelled / total) * 100) : 0,
     };
   }, [rows]);
 
   const onStartEdit = (row) => {
     setEditingId(getId(row));
     setPayload({
-      status: row.status || 'pending',
       result: row.result || 'pending',
       reason: row.reason || '',
       note: row.note || '',
@@ -151,20 +149,13 @@ export default function AdminRegistrationsPage() {
       render: (_, row) => programMap[row.bloodProgramId]?.name || row.bloodProgramId || '-',
     },
     {
-      title: 'Trạng thái',
-      key: 'status',
+      title: 'Kết quả',
+      key: 'result',
       width: 140,
       render: (_, row) => {
-        const status = mapRegisterStatus(row.status);
+        const status = mapRegisterStatus(row.result);
         return <StatusBadge tone={status.tone}>{status.label}</StatusBadge>;
       },
-    },
-    {
-      title: 'Kết quả',
-      dataIndex: 'result',
-      key: 'result',
-      width: 120,
-      render: (value) => <Tag>{value || '-'}</Tag>,
     },
     {
       title: 'Ghi chú',
@@ -202,9 +193,9 @@ export default function AdminRegistrationsPage() {
 
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}><Card className="surface-card admin-stat-card"><Statistic title="Tổng đơn" value={stats.total} /></Card></Col>
-        <Col xs={24} sm={12} lg={6}><Card className="surface-card admin-stat-card"><Statistic title="Tỷ lệ duyệt" value={stats.approvedRate} suffix="%" /></Card></Col>
+        <Col xs={24} sm={12} lg={6}><Card className="surface-card admin-stat-card"><Statistic title="Tỷ lệ thành công" value={stats.successRate} suffix="%" /></Card></Col>
         <Col xs={24} sm={12} lg={6}><Card className="surface-card admin-stat-card"><Statistic title="Tỷ lệ từ chối" value={stats.rejectedRate} suffix="%" /></Card></Col>
-        <Col xs={24} sm={12} lg={6}><Card className="surface-card admin-stat-card"><Statistic title="Hiến thành công" value={stats.success} /></Card></Col>
+        <Col xs={24} sm={12} lg={6}><Card className="surface-card admin-stat-card"><Statistic title="Tỷ lệ hủy" value={stats.cancelledRate} suffix="%" /></Card></Col>
       </Row>
 
       <Card
@@ -271,11 +262,12 @@ export default function AdminRegistrationsPage() {
               <Input.TextArea value={payload.note} readOnly rows={3} />
             </Form.Item>
           )}
-          <Form.Item label="Trạng thái đơn">
-            <Select value={payload.status} onChange={(value) => setPayload((prev) => ({ ...prev, status: value }))} options={[{ value: 'pending', label: 'pending' }, { value: 'approved', label: 'approved' }, { value: 'rejected', label: 'rejected' }, { value: 'cancelled', label: 'cancelled' }]} />
-          </Form.Item>
-          <Form.Item label="Kết quả hiến máu">
-            <Select value={payload.result} onChange={(value) => setPayload((prev) => ({ ...prev, result: value }))} options={[{ value: 'pending', label: 'pending' }, { value: 'success', label: 'success' }, { value: 'reject', label: 'reject' }]} />
+          <Form.Item label="Kết quả đơn">
+            {String(payload.result || '').toLowerCase() === 'cancelled' ? (
+              <Select value={payload.result} disabled options={[]} />
+            ) : (
+              <Select value={payload.result} onChange={(value) => setPayload((prev) => ({ ...prev, result: value }))} options={[{ value: 'approved', label: 'Được phê duyệt' }, { value: 'rejected', label: 'Bị từ chối' }]} />
+            )}
           </Form.Item>
           <Form.Item label="Lý do (nếu có)">
             <Input value={payload.reason} onChange={(event) => setPayload((prev) => ({ ...prev, reason: event.target.value }))} placeholder="Nhập lý do" />

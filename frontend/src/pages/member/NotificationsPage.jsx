@@ -29,7 +29,7 @@ export default function MemberNotificationsPage() {
 
   return (
     <Space direction="vertical" size={20} style={{ width: "100%" }}>
-      <PageTitle title="Thông báo thành viên" description="Các thông báo được lấy từ endpoint /notifications." />
+      <PageTitle title="Thông báo thành viên" description="Các thông báo được gửi đến bạn" />
       {error ? <Alert type="error" showIcon message={error} /> : null}
       <Row gutter={[16, 16]}>
         <Col xs={24} md={9}>

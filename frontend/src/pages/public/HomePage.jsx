@@ -14,7 +14,7 @@ import {
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { programsApi, registersApi } from "../../services/api.js";
-import { formatDate, formatTime, getId, isProgramRegistrationOpen } from "../../utils/format.js";
+import { formatDate, formatTime, getId, isProgramRegistrationOpen, sortProgramsByRegistrationPriority } from "../../utils/format.js";
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -30,12 +30,7 @@ export default function HomePage() {
       try {
         const programData = await programsApi.getAllPaginated({ page: 1, limit: 100 });
         let items = Array.isArray(programData?.data) ? programData.data : [];
-        const now = new Date().getTime();
-        items = items.sort((a, b) => {
-        const distA = Math.abs(new Date(a.date).getTime() - now);
-        const distB = Math.abs(new Date(b.date).getTime() - now);
-        return distA - distB;
-      });
+        items = sortProgramsByRegistrationPriority(items);
         setPrograms(items);
         setCount(programData?.pagination?.totalItems || 0);
       } catch {
@@ -46,8 +41,6 @@ export default function HomePage() {
     };
     load();
   }, []);
-
-  console.log(programs);
   useEffect(() => {
     const load = async () => {
       try {
