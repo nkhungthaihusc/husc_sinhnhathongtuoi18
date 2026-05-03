@@ -14,15 +14,13 @@ const router = express.Router();
  *     description: Authentication endpoints
  */
 
-const loginLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000, // 10 phút
-  max: 20, // Giới hạn 5 lần thử
-  message: {
-    code: 429,
-    message: "Bạn đã thử quá nhiều lần, vui lòng quay lại sau 10 phút!"
-  },
-  standardHeaders: true, // Trả về thông tin giới hạn trong header RateLimit-*
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 phút
+  max: 100, // giới hạn mỗi IP 100 request
+  standardHeaders: true,
   legacyHeaders: false,
+  // Thêm dòng dưới đây để tắt cảnh báo validate header của thư viện
+  validate: { xForwardedForHeader: false }, 
 });
 /**
  * @swagger
