@@ -8,6 +8,8 @@ import AdminMembersPage from '../pages/admin/MembersPage.jsx';
 import AdminNotificationsPage from '../pages/admin/NotificationsPage.jsx';
 import AdminProgramsPage from '../pages/admin/ProgramsPage.jsx';
 import AdminRegistrationsPage from '../pages/admin/RegistrationsPage.jsx';
+import AdminProfilePage from '../pages/admin/ProfilePage.jsx';
+import AdminHistoryPage from '../pages/admin/HistoryPage.jsx';
 import MemberDashboardPage from '../pages/member/DashboardPage.jsx';
 import MemberHistoryPage from '../pages/member/HistoryPage.jsx';
 import MemberNotificationsPage from '../pages/member/NotificationsPage.jsx';
@@ -28,8 +30,10 @@ const memberLinks = [
 const adminLinks = [
   { to: '/admin/dashboard', label: 'Tổng quan' },
   { to: '/admin/members', label: 'Thành viên' },
+  { to: '/admin/profile', label: 'Hồ sơ cá nhân' },
   { to: '/admin/programs', label: 'Chương trình' },
   { to: '/admin/registrations', label: 'Đăng ký hiến máu' },
+  { to: '/admin/history', label: 'Lịch sử hiến máu' },
   { to: '/admin/notifications', label: 'Thông báo' }
 ];
 
@@ -69,6 +73,8 @@ export default function AppRouter() {
           <Route path="members" element={<AdminMembersPage />} />
           <Route path="programs" element={<AdminProgramsPage />} />
           <Route path="registrations" element={<AdminRegistrationsPage />} />
+          <Route path="profile" element={<AdminProfilePage />} />
+          <Route path="history" element={<AdminHistoryPage />} />
           <Route path="notifications" element={<AdminNotificationsPage />} />
         </Route>
       </Route>

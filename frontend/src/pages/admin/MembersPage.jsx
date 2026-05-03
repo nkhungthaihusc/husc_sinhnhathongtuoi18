@@ -338,7 +338,7 @@ export default function AdminMembersPage() {
             <Col xs={24} md={12} lg={8}><Form.Item label="MSSV" required validateStatus={fieldErrors.studentId ? "error" : ""} help={fieldErrors.studentId}><Input name="studentId" value={form.studentId} onChange={onChange} disabled={Boolean(editStudentId)} /></Form.Item></Col>
             <Col xs={24} md={12} lg={8}><Form.Item label="Email" required validateStatus={fieldErrors.email ? "error" : ""} help={fieldErrors.email}><Input name="email" value={form.email} onChange={onChange} type="email" /></Form.Item></Col>
             <Col xs={24} md={12} lg={8}><Form.Item label="Số điện thoại" required validateStatus={fieldErrors.phone ? "error" : ""} help={fieldErrors.phone}><Input name="phone" value={form.phone} onChange={onChange} /></Form.Item></Col>
-            <Col xs={24} md={12} lg={8}><Form.Item label="CCCD" required validateStatus={fieldErrors.cccd ? "error" : ""} help={fieldErrors.cccd}><Input name="cccd" value={form.cccd} onChange={onChange} /></Form.Item></Col>
+            <Col xs={24} md={12} lg={8}><Form.Item label="CCCD" validateStatus={fieldErrors.cccd ? "error" : ""} help={fieldErrors.cccd}><Input name="cccd" value={form.cccd} onChange={onChange} /></Form.Item></Col>
             <Col xs={24} md={12} lg={8}><Form.Item label="Nhóm máu"><Input name="bloodGroup" value={form.bloodGroup} onChange={onChange} /></Form.Item></Col>
             <Col xs={24} md={12} lg={8}>
               <Form.Item label="Thuộc ban">

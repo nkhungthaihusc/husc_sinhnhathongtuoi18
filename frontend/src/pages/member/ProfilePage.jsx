@@ -97,7 +97,7 @@ export default function MemberProfilePage() {
         <Descriptions column={{ xs: 1, md: 2 }} size="small">
           <Descriptions.Item label="Họ tên">{student?.name || "-"}</Descriptions.Item>
           <Descriptions.Item label="MSSV">{student?.studentId || "-"}</Descriptions.Item>
-          <Descriptions.Item label="CCCD">{student?.cccd || "-"}</Descriptions.Item>
+          <Descriptions.Item label="Ngày sinh">{formatDate(student?.birthDate)}</Descriptions.Item>
           <Descriptions.Item label="Ngày tham gia">{formatDate(student?.joinDate)}</Descriptions.Item>
         </Descriptions>
       </Card>
