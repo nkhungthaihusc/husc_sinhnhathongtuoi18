@@ -14,7 +14,7 @@ const router = express.Router();
  *     description: Authentication endpoints
  */
 
-const limiter = rateLimit({
+const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
   max: 100, // giới hạn mỗi IP 100 request
   standardHeaders: true,
