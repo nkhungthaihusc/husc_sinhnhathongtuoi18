@@ -18,6 +18,7 @@ import {
 } from 'antd';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
+import LoadingScreen from '../../components/LoadingScreen.jsx';
 import PageTitle from '../../components/PageTitle.jsx';
 import { studentsApi, usersApi } from '../../services/api.js';
 import { getId, formatUserStatus } from '../../utils/format.js';
@@ -61,6 +62,7 @@ export default function AdminMembersPage() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
     const [userData, studentData] = await Promise.all([usersApi.getAll(), studentsApi.getAll()]);
@@ -75,6 +77,8 @@ export default function AdminMembersPage() {
         await load();
       } catch {
         if (mounted) setError('Không tải được danh sách thành viên');
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
     bootstrap();
@@ -141,6 +145,10 @@ export default function AdminMembersPage() {
   };
 
   const hasErrors = useMemo(() => Object.values(fieldErrors).some(err => err), [fieldErrors]);
+
+  if (loading) {
+    return <LoadingScreen message="Đang tải danh sách thành viên..." />;
+  }
 
   const resetForm = () => {
     setEditUserId('');

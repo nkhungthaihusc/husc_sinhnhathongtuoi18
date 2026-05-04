@@ -14,6 +14,7 @@ import {
   Typography,
 } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import LoadingScreen from '../../components/LoadingScreen.jsx';
 import PageTitle from '../../components/PageTitle.jsx';
 import StatusBadge from '../../components/StatusBadge.jsx';
 import { programsApi, registersApi } from '../../services/api.js';
@@ -32,6 +33,7 @@ export default function AdminRegistrationsPage() {
   const [tableLoading, setTableLoading] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const loadRegistersByProgram = useCallback(async (programId) => {
     if (!programId) {
@@ -75,6 +77,8 @@ export default function AdminRegistrationsPage() {
         await loadPrograms();
       } catch {
         if (mounted) setError('Không tải được danh sách đăng ký');
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
     bootstrap();
@@ -186,6 +190,10 @@ export default function AdminRegistrationsPage() {
   ];
 
   const selectedProgram = selectedProgramId ? programMap[selectedProgramId] : null;
+
+  if (loading) {
+    return <LoadingScreen message="Đang tải danh sách đăng ký..." />;
+  }
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>

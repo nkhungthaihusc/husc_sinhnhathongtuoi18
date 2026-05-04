@@ -11,6 +11,7 @@ import {
   Typography,
 } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
+import LoadingScreen from '../../components/LoadingScreen.jsx';
 import PageTitle from '../../components/PageTitle.jsx';
 import { notificationsApi } from '../../services/api.js';
 import { formatDateTime, getId } from '../../utils/format.js';
@@ -26,6 +27,7 @@ export default function AdminNotificationsPage() {
   const [search, setSearch] = useState('');
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
     const data = await notificationsApi.getAll();
@@ -39,6 +41,8 @@ export default function AdminNotificationsPage() {
         await load();
       } catch {
         if (mounted) setError('Không tải được thông báo');
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
     bootstrap();
@@ -52,6 +56,10 @@ export default function AdminNotificationsPage() {
     if (!q) return rows;
     return rows.filter((item) => `${item.title || ''} ${item.content || ''}`.toLowerCase().includes(q));
   }, [rows, search]);
+
+  if (loading) {
+    return <LoadingScreen message="Đang tải danh sách thông báo..." />;
+  }
 
   const onChange = (event) => {
     const { name, value } = event.target;

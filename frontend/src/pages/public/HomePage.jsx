@@ -13,6 +13,7 @@ import {
 } from "antd";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import LoadingScreen from "../../components/LoadingScreen.jsx";
 import { programsApi, registersApi } from "../../services/api.js";
 import { formatDate, formatDateTime, getId, isProgramRegistrationOpen, sortProgramsByRegistrationPriority } from "../../utils/format.js";
 
@@ -20,41 +21,45 @@ const { Paragraph, Text, Title } = Typography;
 
 export default function HomePage() {
   const [programs, setPrograms] = useState([]);
-  const [registers, setRegisters] = useState([]);
+  const [registers, setRegisters] = useState({ total: 0, pending: 0 });
   const [count, setCount] = useState(0);
   const [error, setError] = useState("");
   const [selectedProgram, setSelectedProgram] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
     const load = async () => {
       try {
-        const programData = await programsApi.getAllPaginated({ page: 1, limit: 100 });
+        const [programData, registerData] = await Promise.all([
+          programsApi.getAllPaginated({ page: 1, limit: 100 }),
+          registersApi.getAll(),
+        ]);
         let items = Array.isArray(programData?.data) ? programData.data : [];
         items = sortProgramsByRegistrationPriority(items);
+        if (!mounted) return;
         setPrograms(items);
         setCount(programData?.pagination?.totalItems || 0);
+        setRegisters(registerData || { total: 0, pending: 0 });
       } catch {
-        setError(
-          "Không thể tải hết dữ liệu công khai. Bạn vẫn có thể vào từng trang để thao tác.",
-        );
+        if (mounted) {
+          setError(
+            "Không thể tải hết dữ liệu công khai. Bạn vẫn có thể vào từng trang để thao tác.",
+          );
+        }
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
     load();
-  }, []);
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const registerData = await registersApi.getAll();
-        setRegisters(registerData);
-        console.log(registerData);
-      } catch {
-        setError(
-          "Không thể tải hết dữ liệu công khai. Bạn vẫn có thể vào từng trang để thao tác.",
-        );
-      }
+    return () => {
+      mounted = false;
     };
-    load();
   }, []);
+
+  if (loading) {
+    return <LoadingScreen message="Đang tải dữ liệu công khai..." />;
+  }
 
   return (
     <Space direction="vertical" size={20} style={{ width: "100%" }}>

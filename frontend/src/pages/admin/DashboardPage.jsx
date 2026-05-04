@@ -1,6 +1,7 @@
 import { ArrowUpOutlined, TeamOutlined } from '@ant-design/icons';
 import { Card, Col, Empty, Progress, Row, Space, Statistic, Table, Typography } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
+import LoadingScreen from '../../components/LoadingScreen.jsx';
 import PageTitle from '../../components/PageTitle.jsx';
 import { programsApi, registersApi, studentsApi } from '../../services/api.js';
 import { formatDateTime, getId, mapRegisterStatus } from '../../utils/format.js';
@@ -12,8 +13,10 @@ export default function AdminDashboardPage() {
   const [programs, setPrograms] = useState([]);
   const [programTotal, setProgramTotal] = useState(0);
   const [registers, setRegisters] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
     const load = async () => {
       try {
         const [studentData, programData, registerData] = await Promise.all([
@@ -21,19 +24,27 @@ export default function AdminDashboardPage() {
           programsApi.getAllPaginated({ page: 1, limit: 100 }),
           registersApi.getAll(),
         ]);
+        if (!mounted) return;
         setStudents(Array.isArray(studentData) ? studentData : []);
         const programList = Array.isArray(programData?.data) ? programData.data : [];
         setPrograms(programList);
         setProgramTotal(programData?.pagination?.totalItems || 0);
         setRegisters(Array.isArray(registerData["bloodRegisters"]) ? registerData["bloodRegisters"] : []);
       } catch {
-        setStudents([]);
-        setPrograms([]);
-        setProgramTotal(0);
-        setRegisters([]);
+        if (mounted) {
+          setStudents([]);
+          setPrograms([]);
+          setProgramTotal(0);
+          setRegisters([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
     load();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const approvedRate = useMemo(() => {
@@ -65,6 +76,10 @@ export default function AdminDashboardPage() {
     },
     [registers, programs],
   );
+
+  if (loading) {
+    return <LoadingScreen message="Đang tải tổng quan quản trị..." />;
+  }
 
   const columns = [
     {

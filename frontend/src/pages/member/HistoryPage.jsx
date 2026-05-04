@@ -1,5 +1,6 @@
 import { Alert, Button, Card, Col, Empty, Modal, Row, Space, Statistic, Table } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
+import LoadingScreen from '../../components/LoadingScreen.jsx';
 import PageTitle from '../../components/PageTitle.jsx';
 import StatusBadge from '../../components/StatusBadge.jsx';
 import { useAuth } from '../../hooks/useAuth.js';
@@ -14,8 +15,10 @@ export default function MemberHistoryPage() {
   const [detailTarget, setDetailTarget] = useState(null);
   const [error, setError] = useState('');
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
     const load = async () => {
       try {
         const [registerData, programData] = await Promise.all([
@@ -23,14 +26,20 @@ export default function MemberHistoryPage() {
           programsApi.getAllPaginated({ page: 1, limit: 100 }),
         ]);
         const mine = registerData?.listBloodRegisters;
+        if (!mounted) return;
         setRows(Array.isArray(mine) ? mine : []);
         const mapped = Object.fromEntries((programData?.data || []).map((program) => [getId(program), program]));
         setProgramMap(mapped);
       } catch (e) {
-        setError(e?.response?.data?.message || 'Không tải được lịch sử hiến máu');
+        if (mounted) setError(e?.response?.data?.message || 'Không tải được lịch sử hiến máu');
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
     load();
+    return () => {
+      mounted = false;
+    };
   }, [user?.studentId]);
 
   const load = async () => {
@@ -119,6 +128,10 @@ export default function MemberHistoryPage() {
       ),
     },
   ];
+
+  if (loading) {
+    return <LoadingScreen message="Đang tải lịch sử hiến máu..." />;
+  }
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>

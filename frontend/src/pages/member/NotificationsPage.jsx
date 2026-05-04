@@ -1,5 +1,6 @@
 import { Alert, Card, Col, Empty, List, Row, Space, Typography } from "antd";
 import { useEffect, useState } from "react";
+import LoadingScreen from "../../components/LoadingScreen.jsx";
 import PageTitle from "../../components/PageTitle.jsx";
 import { notificationsApi } from "../../services/api.js";
 import { formatDateTime, getId } from "../../utils/format.js";
@@ -10,20 +11,32 @@ export default function MemberNotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [selectedId, setSelectedId] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
     const load = async () => {
       try {
         const data = await notificationsApi.getAll();
         const list = Array.isArray(data) ? data : [];
+        if (!mounted) return;
         setNotifications(list);
         setSelectedId(getId(list[0]));
       } catch (e) {
-        setError(e?.response?.data?.message || 'Không tải được thông báo');
+        if (mounted) setError(e?.response?.data?.message || 'Không tải được thông báo');
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
     load();
+    return () => {
+      mounted = false;
+    };
   }, []);
+
+  if (loading) {
+    return <LoadingScreen message="Đang tải thông báo..." />;
+  }
 
   const current = notifications.find((item) => getId(item) === selectedId) || notifications[0];
 

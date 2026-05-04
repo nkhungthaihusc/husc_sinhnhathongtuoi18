@@ -14,6 +14,7 @@ import {
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import LoadingScreen from "../../components/LoadingScreen.jsx";
 import PageTitle from "../../components/PageTitle.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
 import { programsApi, registersApi, studentsApi } from "../../services/api.js";
@@ -30,6 +31,7 @@ export default function RegisterPage() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [form, setForm] = useState({
     name: '',
     studentId: '',
@@ -44,39 +46,40 @@ export default function RegisterPage() {
   });
 
   useEffect(() => {
+    let mounted = true;
     const load = async () => {
       try {
-        const data = await programsApi.getAll();
+        const [data, students] = await Promise.all([
+          programsApi.getAll(),
+          isAuthenticated && user?.studentId ? studentsApi.getAll() : Promise.resolve([]),
+        ]);
+        if (!mounted) return;
         setPrograms(Array.isArray(data) ? data : []);
+        if (isAuthenticated && user?.studentId) {
+          const me = (students || []).find((item) => item.studentId === user.studentId);
+          if (me) {
+            setForm((prev) => ({
+              ...prev,
+              name: me.name || prev.name,
+              studentId: me.studentId || prev.studentId,
+              phone: me.phone || prev.phone,
+              email: me.email || prev.email,
+              CCCD: me.cccd || prev.CCCD,
+              bloodGroup: me.bloodGroup || prev.bloodGroup
+            }));
+          }
+        }
       } catch {
-        setPrograms([]);
+        if (mounted) setPrograms([]);
+      } finally {
+        if (mounted) setInitialLoading(false);
       }
     };
     load();
-  }, []);
-
-  useEffect(() => {
-    const hydrateProfile = async () => {
-      if (!isAuthenticated || !user?.studentId) return;
-      try {
-        const students = await studentsApi.getAll();
-        const me = (students || []).find((item) => item.studentId === user.studentId);
-        if (!me) return;
-        setForm((prev) => ({
-          ...prev,
-          name: me.name || prev.name,
-          studentId: me.studentId || prev.studentId,
-          phone: me.phone || prev.phone,
-          email: me.email || prev.email,
-          CCCD: me.cccd || prev.CCCD,
-          bloodGroup: me.bloodGroup || prev.bloodGroup
-        }));
-      } catch {
-        // no-op
-      }
+    return () => {
+      mounted = false;
     };
-    hydrateProfile();
-  }, [isAuthenticated, user?.studentId]);
+  }, []);
 
   const selectablePrograms = useMemo(
     () =>
@@ -92,6 +95,10 @@ export default function RegisterPage() {
     if (!program) return null;
     return isProgramRegistrationOpen(program) ? null : program;
   }, [programs, selectedProgramId]);
+
+  if (initialLoading) {
+    return <LoadingScreen message="Đang tải form đăng ký..." />;
+  }
 
   const onChange = (event) => {
     const { name, value } = event.target;

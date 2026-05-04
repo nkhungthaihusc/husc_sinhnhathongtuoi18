@@ -1,5 +1,6 @@
 import { Alert, Button, Card, Col, Descriptions, Form, Input, InputNumber, Row, Space } from "antd";
 import { useEffect, useMemo, useState } from "react";
+import LoadingScreen from "../../components/LoadingScreen.jsx";
 import PageTitle from "../../components/PageTitle.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
 import { studentsApi } from "../../services/api.js";
@@ -19,11 +20,14 @@ export default function MemberProfilePage() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
     const load = async () => {
       try {
         const all = await studentsApi.getAll();
+        if (!mounted) return;
         setAllStudents(Array.isArray(all) ? all : []);
         const mine = (all || []).find((item) => item.studentId === user?.studentId);
         if (!mine) return;
@@ -36,10 +40,15 @@ export default function MemberProfilePage() {
           cccd: mine.cccd || ''
         });
       } catch (e) {
-        setError(e?.response?.data?.message || 'Không tải được hồ sơ cá nhân');
+        if (mounted) setError(e?.response?.data?.message || 'Không tải được hồ sơ cá nhân');
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
     load();
+    return () => {
+      mounted = false;
+    };
   }, [user?.studentId]);
 
   const validateField = (fieldName, value) => {
@@ -70,6 +79,10 @@ export default function MemberProfilePage() {
   };
 
   const hasErrors = useMemo(() => Object.values(fieldErrors).some(err => err), [fieldErrors]);
+
+  if (loading) {
+    return <LoadingScreen message="Đang tải hồ sơ cá nhân..." />;
+  }
 
   const onSubmit = async (event) => {
     event.preventDefault();

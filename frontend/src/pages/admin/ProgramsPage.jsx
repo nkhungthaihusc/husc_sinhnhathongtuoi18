@@ -18,6 +18,7 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
+import LoadingScreen from "../../components/LoadingScreen.jsx";
 import PageTitle from "../../components/PageTitle.jsx";
 import { programsApi } from "../../services/api.js";
 import { formatDate, formatDateTime, getId } from "../../utils/format.js";
@@ -42,6 +43,7 @@ export default function AdminProgramsPage() {
   const [form, setForm] = useState(initialForm);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
     const data = await programsApi.getAllPaginated({ page: 1, limit: 100 });
@@ -56,6 +58,8 @@ export default function AdminProgramsPage() {
         await load();
       } catch {
         if (mounted) setError("Không tải được danh sách chương trình");
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
     bootstrap();
@@ -78,6 +82,10 @@ export default function AdminProgramsPage() {
       ).length,
     [programs],
   );
+
+  if (loading) {
+    return <LoadingScreen message="Đang tải danh sách chương trình..." />;
+  }
 
   const onChange = (event) => {
     const { name, value } = event.target;

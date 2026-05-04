@@ -1,6 +1,7 @@
 import { Button, Card, Col, List, Row, Space, Statistic } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import LoadingScreen from "../../components/LoadingScreen.jsx";
 import PageTitle from "../../components/PageTitle.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
 import { notificationsApi, programsApi, registersApi, studentsApi } from "../../services/api.js";
@@ -9,11 +10,13 @@ import { formatDateTime } from "../../utils/format.js";
 export default function MemberDashboardPage() {
   const { user } = useAuth();
   const [programs, setPrograms] = useState([]);
-  const [registers, setRegisters] = useState([]);
+  const [registers, setRegisters] = useState({ TongSoLanHien: 0, approved: 0 });
   const [notifications, setNotifications] = useState([]);
   const [student, setStudent] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
     const load = async () => {
       try {
         const [programData, registerData, notificationData, studentData] = await Promise.all([
@@ -22,16 +25,21 @@ export default function MemberDashboardPage() {
           notificationsApi.getAll(),
           studentsApi.getAll()
         ]);
+        if (!mounted) return;
         setPrograms(Array.isArray(programData?.data) ? programData.data : []);
-        setRegisters(registerData || null);
-        console.log(registerData)
+        setRegisters(registerData || { TongSoLanHien: 0, approved: 0 });
         setNotifications(Array.isArray(notificationData) ? notificationData : []);
         setStudent((studentData || []).find((item) => item.studentId === user?.studentId) || null);
       } catch {
-        setPrograms([]);
+        if (mounted) setPrograms([]);
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
     load();
+    return () => {
+      mounted = false;
+    };
   }, [user?.studentId]);
 
   // const mine = useMemo(
@@ -43,6 +51,10 @@ export default function MemberDashboardPage() {
     () => [...programs].sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 5),
     [programs]
   );
+
+  if (loading) {
+    return <LoadingScreen message="Đang tải bảng điều khiển thành viên..." />;
+  }
 
 
   return (
