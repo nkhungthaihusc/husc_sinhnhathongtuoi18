@@ -6,6 +6,7 @@ import PageTitle from '../../components/PageTitle.jsx';
 import { programsApi, registersApi, studentsApi } from '../../services/api.js';
 import { formatDateTime, getId, mapRegisterStatus } from '../../utils/format.js';
 
+
 const { Text } = Typography;
 
 export default function AdminDashboardPage() {
