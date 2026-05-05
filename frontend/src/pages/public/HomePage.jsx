@@ -14,8 +14,8 @@ import {
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
-import { programsApi, registersApi } from "../../services/api.js";
-import { formatDate, formatDateTime, getId, isProgramRegistrationOpen, sortProgramsByRegistrationPriority } from "../../utils/format.js";
+import { programsApi } from "../../services/api.js";
+import { formatDateTime, getId, isProgramRegistrationOpen, sortProgramsByRegistrationPriority } from "../../utils/format.js";
 
 const { Paragraph, Text, Title } = Typography;
 
@@ -26,21 +26,39 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [selectedProgram, setSelectedProgram] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [latestProgram, setLatestProgram] = useState(null);
 
   useEffect(() => {
     let mounted = true;
     const load = async () => {
       try {
-        const [programData, registerData] = await Promise.all([
+        const [programData] = await Promise.all([
           programsApi.getAllPaginated({ page: 1, limit: 100 }),
-          registersApi.getAll(),
         ]);
         let items = Array.isArray(programData?.data) ? programData.data : [];
         items = sortProgramsByRegistrationPriority(items);
         if (!mounted) return;
         setPrograms(items);
         setCount(programData?.pagination?.totalItems || 0);
-        setRegisters(registerData || { total: 0, pending: 0 });
+
+        // Get latest program (nearest date)
+        const latest = items.length > 0 ? items[0] : null;
+        setLatestProgram(latest);
+
+        // Get statistics for latest program only
+        if (latest && getId(latest)) {
+          try {
+            const statsData = await programsApi.statistic(getId(latest));
+            setRegisters({
+              total: statsData?.total || 0,
+              pending: 0,
+            });
+          } catch {
+            setRegisters({ total: 0, pending: 0 });
+          }
+        } else {
+          setRegisters({ total: 0, pending: 0 });
+        }
       } catch {
         if (mounted) {
           setError(
@@ -102,6 +120,16 @@ export default function HomePage() {
 
       {error ? <Alert type="warning" showIcon message={error} /> : null}
 
+      {latestProgram ? (
+        <Card className="surface-card" style={{ background: "#fef2f2", borderColor: "#b91c1c" }}>
+          <Space wrap>
+            <Text strong style={{ color: "#7f1d1d" }}>Đợt hiến máu gần nhất:</Text>
+            <Text style={{ color: "#7f1d1d" }}>{latestProgram.name}</Text>
+            <Text type="secondary">({formatDateTime(latestProgram.date)})</Text>
+          </Space>
+        </Card>
+      ) : null}
+
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8}>
           <Card className="surface-card stat-card">
@@ -110,7 +138,7 @@ export default function HomePage() {
         </Col>
         <Col xs={24} md={8}>
           <Card className="surface-card stat-card">
-            <Statistic title="Tổng lượt đăng ký" value={registers.total} />
+            <Statistic title="Tổng lượt đăng ký (đợt gần nhất)" value={registers.total} />
           </Card>
         </Col>
         <Col xs={24} md={8}>
