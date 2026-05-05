@@ -8,7 +8,7 @@ const StudentSchema = new mongoose.Schema({
     joinDate: { type: Date, required: true },
     phone: { type: String, required: true, unique: true ,index: true},
     email: { type: String, required: true, unique: true, index: true},
-    cccd: { type: String, required: true, unique: true, index: true },
+    cccd: { type: String, required: false, unique: true, index: true },
     bloodGroup: { type: String, required: true },
     group: { type: String, required: false }, // Thuoc bang 
     category: { type: String, required: true }, // Nganh hoc
