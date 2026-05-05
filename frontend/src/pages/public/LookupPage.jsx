@@ -16,7 +16,7 @@ import {
 } from "antd";
 import { useEffect, useState } from "react";
 import PageTitle from "../../components/PageTitle.jsx";
-import { registersApi } from "../../services/api.js";
+import { registersApi, programsApi } from "../../services/api.js";
 import StatusBadge from "../../components/StatusBadge.jsx";
 import { formatDateTime, getId, mapRegisterStatus } from "../../utils/format.js";
 
@@ -38,11 +38,31 @@ export default function LookupPage() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ page: 1, limit: LOOKUP_PAGE_SIZE, totalItems: 0, totalPages: 1 });
   const [summary, setSummary] = useState({ TongSoLanHien: 0 });
+  const [programs, setPrograms] = useState([]);
 
   const canCancelRegister = (row) => {
     const result = String(row?.result || '').toLowerCase();
     return !['cancelled', 'approved', 'rejected'].includes(result);
   };
+
+  const getProgramName = (bloodProgramId) => {
+    const program = programs.find(p => String(p._id || p.id) === String(bloodProgramId));
+    return program?.name || "-";
+  };
+
+  useEffect(() => {
+    const loadPrograms = async () => {
+      try {
+        const data = await programsApi.getAll();
+        setPrograms(Array.isArray(data) ? data : []);
+      } catch (e) {
+        console.error('Lỗi khi load danh sách chương trình:', e);
+        setPrograms([]);
+      }
+    };
+
+    loadPrograms();
+  }, []);
 
   const refreshLookup = async (keyword, currentPage) => {
     const response = await registersApi.searchPaginated(keyword, {
@@ -50,7 +70,9 @@ export default function LookupPage() {
       limit: LOOKUP_PAGE_SIZE,
     });
     const data = response?.data || {};
-    setRows(Array.isArray(data.listBloodRegisters) ? data.listBloodRegisters : []);
+    const listBloodRegisters = Array.isArray(data.listBloodRegisters) ? data.listBloodRegisters : [];
+    console.log('Mảng đăng ký máu được gọi về:', listBloodRegisters);
+    setRows(listBloodRegisters);
     setSummary({
       TongSoLanHien: Number(data.TongSoLanHien || 0),
     });
@@ -286,8 +308,10 @@ export default function LookupPage() {
         <Space direction="vertical" size={10} style={{ width: "100%" }}>
           <div><strong>Người đăng ký:</strong> {detailTarget?.name || "-"}</div>
           <div><strong>MSSV:</strong> {detailTarget?.studentId || "-"}</div>
+          <div><strong>Chương trình:</strong> {getProgramName(detailTarget?.bloodProgramId)}</div>
           <div><strong>Kết quả:</strong> {mapRegisterStatus(detailTarget?.result).label}</div>
-          <div><strong>Lý do:</strong> {detailTarget?.reason || "Không có lý do"}</div>
+          <div><strong>Ngày xác nhận:</strong> {detailTarget?.updatedAt ? formatDateTime(detailTarget.updatedAt) : "-"}</div>
+          <div><strong>Lý do:</strong> {detailTarget?.reason || " "}</div>
         </Space>
       </Modal>
     </Space>
