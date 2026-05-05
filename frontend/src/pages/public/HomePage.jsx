@@ -35,6 +35,7 @@ export default function HomePage() {
         const [programData] = await Promise.all([
           programsApi.getAllPaginated({ page: 1, limit: 100 }),
         ]);
+        console.log("Loaded programs:", programData);
         let items = Array.isArray(programData?.data) ? programData.data : [];
         items = sortProgramsByRegistrationPriority(items);
         if (!mounted) return;
@@ -49,9 +50,10 @@ export default function HomePage() {
         if (latest && getId(latest)) {
           try {
             const statsData = await programsApi.statistic(getId(latest));
+            console.log(`Loaded register stats for program ${getId(latest)}:`, statsData);
             setRegisters({
-              total: statsData?.total || 0,
-              pending: 0,
+              total: statsData?.summary.total || 0,
+              pending: statsData?.summary.pending || 0,
             });
           } catch {
             setRegisters({ total: 0, pending: 0 });
