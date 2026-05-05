@@ -372,6 +372,7 @@ export default function AdminMembersPage() {
                 <DatePicker
                   style={{ width: '100%' }}
                   format="DD/MM/YYYY"
+                  placeholder="Chọn ngày"
                   value={form.birthDate ? dayjs(form.birthDate) : null}
                   onChange={(date) => setForm((prev) => ({ ...prev, birthDate: date ? date.format('YYYY-MM-DD') : '' }))}
                 />
@@ -382,6 +383,7 @@ export default function AdminMembersPage() {
                 <DatePicker
                   style={{ width: '100%' }}
                   format="DD/MM/YYYY"
+                  placeholder="Chọn ngày"
                   value={form.joinDate ? dayjs(form.joinDate) : null}
                   onChange={(date) => setForm((prev) => ({ ...prev, joinDate: date ? date.format('YYYY-MM-DD') : '' }))}
                 />
