@@ -112,6 +112,9 @@ export default function MemberProfilePage() {
           <Descriptions.Item label="MSSV">{student?.studentId || "-"}</Descriptions.Item>
           <Descriptions.Item label="Ngày sinh">{formatDate(student?.birthDate)}</Descriptions.Item>
           <Descriptions.Item label="Ngày tham gia">{formatDate(student?.joinDate)}</Descriptions.Item>
+          <Descriptions.Item label="Thuộc ban">{student?.group}</Descriptions.Item>
+          <Descriptions.Item label="Chức vụ">{student?.position}</Descriptions.Item>
+          <Descriptions.Item label="Ngành học">{student?.category}</Descriptions.Item>
         </Descriptions>
       </Card>
       <Card className="surface-card">
