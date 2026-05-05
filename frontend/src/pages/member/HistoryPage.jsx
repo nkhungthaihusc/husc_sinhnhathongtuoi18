@@ -16,6 +16,10 @@ export default function MemberHistoryPage() {
   const [error, setError] = useState('');
   const [cancelLoading, setCancelLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const renderBlankIfNullText = (value) => {
+    const text = String(value ?? "").trim();
+    return !text || text.toLowerCase() === "null" ? " " : text;
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -197,7 +201,7 @@ export default function MemberHistoryPage() {
         <Space direction="vertical" size={10} style={{ width: '100%' }}>
           <div><strong>Chương trình:</strong> {detailTarget ? (programMap[detailTarget.bloodProgramId]?.name || detailTarget.bloodProgramId || '-') : '-'}</div>
           <div><strong>Kết quả:</strong> {mapRegisterStatus(detailTarget?.result).label}</div>
-          <div><strong>Lý do:</strong> {detailTarget?.reason || 'Không có lý do'}</div>
+          <div><strong>Lý do:</strong> {renderBlankIfNullText(detailTarget?.reason)}</div>
           <div><strong>Ngày đăng ký:</strong> {formatDateTime(detailTarget?.createdAt)}</div>
         </Space>
       </Modal>
