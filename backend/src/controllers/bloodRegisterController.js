@@ -227,6 +227,7 @@ class BloodRegisterController {
         address,
         lastDateDonate,
         bloodProgramId,
+        reason,
         ...rest
       } = req.body;
 
@@ -261,8 +262,8 @@ class BloodRegisterController {
         ['lastDateDonate']
       );
 
-      const newBloodRegister = new BloodRegister({
-        studentId,
+      const registerData = {
+        studentId: studentId || null,
         name,
         email,
         phone,
@@ -271,7 +272,9 @@ class BloodRegisterController {
         lastDateDonate: convertedData.lastDateDonate,
         bloodProgramId,
         ...rest,
-      });
+      };
+
+      const newBloodRegister = new BloodRegister(registerData);
       const saveBloodRegister = await newBloodRegister.save();
       return res.status(201).json({
         data: saveBloodRegister,

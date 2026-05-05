@@ -3,7 +3,7 @@ import moment from "moment-timezone";
 
 const BloodRegisterSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    studentId: { type: String, required: true, index: true },
+    studentId: { type: String, required: false, default: null, index: true },
     bloodProgramId: { type: String, required: true, index: true },
     phone: { type: String, required: true, index: true },
     email: { type: String, required: true, index: true },

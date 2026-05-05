@@ -177,7 +177,7 @@ export default function RegisterPage() {
         <Form layout="vertical" onSubmitCapture={onSubmit}>
           <Row gutter={16}>
             <Col xs={24} md={12}><Form.Item label="Họ và tên" required><Input name="name" value={form.name} onChange={onChange} /></Form.Item></Col>
-            <Col xs={24} md={12}><Form.Item label="MSSV" required><Input name="studentId" value={form.studentId} onChange={onChange} /></Form.Item></Col>
+            <Col xs={24} md={12}><Form.Item label="MSSV"><Input name="studentId" value={form.studentId} onChange={onChange} /></Form.Item></Col>
             <Col xs={24} md={12}><Form.Item label="Số điện thoại" required><Input name="phone" value={form.phone} onChange={onChange} /></Form.Item></Col>
             <Col xs={24} md={12}><Form.Item label="Email" required><Input type="email" name="email" value={form.email} onChange={onChange} /></Form.Item></Col>
             <Col xs={24} md={12}><Form.Item label="CCCD" required><Input name="CCCD" value={form.CCCD} onChange={onChange} /></Form.Item></Col>

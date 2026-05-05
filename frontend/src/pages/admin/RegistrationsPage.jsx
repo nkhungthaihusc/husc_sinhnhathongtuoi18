@@ -123,6 +123,13 @@ export default function AdminRegistrationsPage() {
     });
   };
 
+  const renderBlankIfNullText = (value) => {
+    const text = String(value ?? '').trim();
+    return !text || text.toLowerCase() === 'null' ? ' ' : text;
+  };
+
+  const currentRow = editingId ? rows.find(r => getId(r) === editingId) : null;
+
   const onSave = async () => {
     setError('');
     setNotice('');
@@ -264,23 +271,41 @@ export default function AdminRegistrationsPage() {
       </Card>
 
       <Modal open={Boolean(editingId)} title="Cập nhật trạng thái đơn" onCancel={() => setEditingId('')} onOk={onSave} okText="Lưu trạng thái" cancelText="Hủy">
-        <Form layout="vertical">
-          {payload.note && (
-            <Form.Item label="Ghi chú từ người đăng ký">
-              <Input.TextArea value={payload.note} readOnly rows={3} />
-            </Form.Item>
-          )}
-          <Form.Item label="Kết quả đơn">
-            {String(payload.result || '').toLowerCase() === 'cancelled' ? (
-              <Select value={payload.result} disabled options={[]} />
-            ) : (
-              <Select value={payload.result} onChange={(value) => setPayload((prev) => ({ ...prev, result: value }))} options={[{ value: 'approved', label: 'Được phê duyệt' }, { value: 'rejected', label: 'Bị từ chối' }]} />
+        <Space direction="vertical" size={12} style={{ width: '100%' }}>
+          <div style={{ fontWeight: 600 }}>Thông tin đăng ký</div>
+          <div><strong>Người đăng ký:</strong> {currentRow?.name || '-'}</div>
+          <div><strong>MSSV:</strong> {currentRow?.studentId || '-'}</div>
+          <div><strong>Số điện thoại:</strong> {currentRow?.phone || '-'}</div>
+          <div><strong>Email:</strong> {currentRow?.email || '-'}</div>
+          <div><strong>CCCD:</strong> {currentRow?.CCCD || '-'}</div>
+          <div><strong>Nhóm máu:</strong> {currentRow?.bloodGroup || '-'}</div>
+          <div><strong>Địa chỉ:</strong> {currentRow?.address || '-'}</div>
+          <div><strong>Ngày hiến trước:</strong> {currentRow?.lastDateDonate ? formatDate(currentRow.lastDateDonate) : '-'}</div>
+          <div><strong>Chương trình:</strong> {programMap[currentRow?.bloodProgramId]?.name || currentRow?.bloodProgramId || '-'}</div>
+          <div><strong>Ngày xác nhận:</strong> {currentRow?.updatedAt ? formatDateTime(currentRow.updatedAt) : '-'}</div>
+          <div><strong>Kết quả:</strong> {mapRegisterStatus(currentRow?.result).label}</div>
+          <div><strong>Lý do:</strong> {renderBlankIfNullText(currentRow?.reason)}</div>
+          <div><strong>Ghi chú:</strong> {currentRow?.note || '-'}</div>
+          <div><strong>Ngày tạo:</strong> {currentRow?.createdAt ? formatDateTime(currentRow.createdAt) : '-'}</div>
+
+          <Form layout="vertical">
+            {payload.note && (
+              <Form.Item label="Ghi chú từ người đăng ký">
+                <Input.TextArea value={payload.note} readOnly rows={3} />
+              </Form.Item>
             )}
-          </Form.Item>
-          <Form.Item label="Lý do (nếu có)">
-            <Input value={payload.reason} onChange={(event) => setPayload((prev) => ({ ...prev, reason: event.target.value }))} placeholder="Nhập lý do" />
-          </Form.Item>
-        </Form>
+            <Form.Item label="Kết quả đơn">
+              {String(payload.result || '').toLowerCase() === 'cancelled' ? (
+                <Select value={payload.result} disabled options={[]} />
+              ) : (
+                <Select value={payload.result} onChange={(value) => setPayload((prev) => ({ ...prev, result: value }))} options={[{ value: 'approved', label: 'Được phê duyệt' }, { value: 'rejected', label: 'Bị từ chối' }]} />
+              )}
+            </Form.Item>
+            <Form.Item label="Lý do (nếu có)">
+              <Input value={payload.reason} onChange={(event) => setPayload((prev) => ({ ...prev, reason: event.target.value }))} placeholder="Nhập lý do" />
+            </Form.Item>
+          </Form>
+        </Space>
       </Modal>
 
       {notice ? <Alert type="success" showIcon message={notice} /> : null}
