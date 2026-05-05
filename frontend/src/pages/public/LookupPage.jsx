@@ -50,6 +50,11 @@ export default function LookupPage() {
     return program?.name || "-";
   };
 
+  const renderBlankIfNullText = (value) => {
+    const text = String(value ?? "").trim();
+    return !text || text.toLowerCase() === "null" ? " " : text;
+  };
+
   useEffect(() => {
     const loadPrograms = async () => {
       try {
@@ -311,7 +316,7 @@ export default function LookupPage() {
           <div><strong>Chương trình:</strong> {getProgramName(detailTarget?.bloodProgramId)}</div>
           <div><strong>Kết quả:</strong> {mapRegisterStatus(detailTarget?.result).label}</div>
           <div><strong>Ngày xác nhận:</strong> {detailTarget?.updatedAt ? formatDateTime(detailTarget.updatedAt) : "-"}</div>
-          <div><strong>Lý do:</strong> {detailTarget?.reason || " "}</div>
+          <div><strong>Lý do:</strong> {renderBlankIfNullText(detailTarget?.reason)}</div>
         </Space>
       </Modal>
     </Space>
