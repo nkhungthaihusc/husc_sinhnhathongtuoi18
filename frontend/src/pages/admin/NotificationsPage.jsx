@@ -28,6 +28,8 @@ export default function AdminNotificationsPage() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState('');
 
   const load = async () => {
     const data = await notificationsApi.getAll();
@@ -75,6 +77,7 @@ export default function AdminNotificationsPage() {
     event.preventDefault();
     setError('');
     setNotice('');
+    setSubmitting(true);
     try {
       if (editId) {
         await notificationsApi.update(editId, form);
@@ -87,6 +90,8 @@ export default function AdminNotificationsPage() {
       resetForm();
     } catch (e) {
       setError(e?.response?.data?.message || 'Không thể lưu thông báo');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -98,6 +103,7 @@ export default function AdminNotificationsPage() {
   const onDelete = async (id) => {
     setError('');
     setNotice('');
+    setDeletingId(id);
     try {
       await notificationsApi.remove(id);
       await load();
@@ -105,6 +111,8 @@ export default function AdminNotificationsPage() {
       if (editId === id) resetForm();
     } catch (e) {
       setError(e?.response?.data?.message || 'Không thể xóa thông báo');
+    } finally {
+      setDeletingId('');
     }
   };
 
@@ -137,7 +145,7 @@ export default function AdminNotificationsPage() {
         <Space>
           <Button size="small" onClick={() => onEdit(row)}>Sửa</Button>
           <Popconfirm title="Xóa thông báo" description="Bạn chắc chắn muốn xóa thông báo này?" okText="Xóa" cancelText="Hủy" okButtonProps={{ danger: true }} onConfirm={() => onDelete(getId(row))}>
-            <Button size="small" danger>Xóa</Button>
+            <Button size="small" danger loading={deletingId === getId(row)} disabled={!!deletingId}>Xóa</Button>
           </Popconfirm>
         </Space>
       ),
@@ -158,8 +166,8 @@ export default function AdminNotificationsPage() {
           <Form.Item label="Nội dung" required><Input.TextArea rows={4} name="content" value={form.content} onChange={onChange} /></Form.Item>
           <Form.Item label="Liên kết đính kèm (tùy chọn)"><Input name="url" value={form.url} onChange={onChange} placeholder="https://..." /></Form.Item>
           <Space wrap>
-            <Button type="primary" htmlType="submit">{editId ? 'Lưu cập nhật' : 'Tạo thông báo'}</Button>
-            {editId ? <Button onClick={resetForm}>Hủy sửa</Button> : null}
+            <Button type="primary" htmlType="submit" loading={submitting} disabled={submitting}>{editId ? 'Lưu cập nhật' : 'Tạo thông báo'}</Button>
+            {editId ? <Button onClick={resetForm} disabled={submitting}>Hủy sửa</Button> : null}
           </Space>
         </Form>
       </Card>

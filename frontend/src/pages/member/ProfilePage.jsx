@@ -22,6 +22,7 @@ export default function MemberProfilePage() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -125,6 +126,7 @@ export default function MemberProfilePage() {
     if (!student || hasErrors) return;
     setError('');
     setNotice('');
+    setSubmitting(true);
     try {
       await studentsApi.updateInfo(getId(student), {
         phone: form.phone,
@@ -136,6 +138,8 @@ export default function MemberProfilePage() {
       setNotice('Cập nhật thông tin thành công.');
     } catch (e) {
       setError(e?.response?.data?.message || 'Cập nhật thất bại');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -172,7 +176,7 @@ export default function MemberProfilePage() {
             <Col xs={24} md={12}><Form.Item label="CCCD" validateStatus={fieldErrors.cccd ? "error" : ""} help={fieldErrors.cccd}><Input name="cccd" value={form.cccd} onChange={onChange} placeholder="12 chữ số" maxLength="12" /></Form.Item></Col>
             <Col xs={24} md={12}><Form.Item label="Năm học"><InputNumber min={1} max={8} name="yearStudy" value={form.yearStudy ? Number(form.yearStudy) : 1} onChange={(value) => setForm((prev) => ({ ...prev, yearStudy: Number(value || 1) }))} style={{ width: "100%" }} /></Form.Item></Col>
           </Row>
-          <Button type="primary" htmlType="submit" disabled={hasErrors}>Lưu thay đổi</Button>
+          <Button type="primary" htmlType="submit" disabled={hasErrors || submitting} loading={submitting}>Lưu thay đổi</Button>
         </Form>
       </Card>
       {notice ? <Alert type="success" showIcon message={notice} /> : null}

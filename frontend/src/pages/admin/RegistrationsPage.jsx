@@ -34,6 +34,7 @@ export default function AdminRegistrationsPage() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   const loadRegistersByProgram = useCallback(async (programId) => {
     if (!programId) {
@@ -133,6 +134,7 @@ export default function AdminRegistrationsPage() {
   const onSave = async () => {
     setError('');
     setNotice('');
+    setSaving(true);
     try {
       await registersApi.update(editingId, payload);
       await loadRegistersByProgram(selectedProgramId);
@@ -140,6 +142,8 @@ export default function AdminRegistrationsPage() {
       setNotice('Cập nhật đăng ký thành công.');
     } catch (e) {
       setError(e?.response?.data?.message || 'Không thể cập nhật đăng ký');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -270,7 +274,7 @@ export default function AdminRegistrationsPage() {
         />
       </Card>
 
-      <Modal open={Boolean(editingId)} title="Cập nhật trạng thái đơn" onCancel={() => setEditingId('')} onOk={onSave} okText="Lưu trạng thái" cancelText="Hủy">
+      <Modal open={Boolean(editingId)} title="Cập nhật trạng thái đơn" onCancel={() => setEditingId('')} onOk={onSave} okText="Lưu trạng thái" cancelText="Hủy" okButtonProps={{ loading: saving, disabled: saving }} cancelButtonProps={{ disabled: saving }}>
         <Space direction="vertical" size={12} style={{ width: '100%' }}>
           <div style={{ fontWeight: 600 }}>Thông tin đăng ký</div>
           <div><strong>Người đăng ký:</strong> {currentRow?.name || '-'}</div>

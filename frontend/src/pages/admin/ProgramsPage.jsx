@@ -44,6 +44,8 @@ export default function AdminProgramsPage() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState("");
 
   const load = async () => {
     const data = await programsApi.getAllPaginated({ page: 1, limit: 100 });
@@ -101,6 +103,7 @@ export default function AdminProgramsPage() {
     event.preventDefault();
     setNotice("");
     setError("");
+    setSubmitting(true);
     try {
       if (editId) {
         await programsApi.update(editId, {
@@ -125,6 +128,8 @@ export default function AdminProgramsPage() {
       resetForm();
     } catch (e) {
       setError(e?.response?.data?.message || "Lưu chương trình thất bại");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -144,6 +149,7 @@ export default function AdminProgramsPage() {
   const onDelete = async (id) => {
     setNotice("");
     setError("");
+    setDeletingId(id);
     try {
       await programsApi.remove(id);
       await load();
@@ -151,6 +157,8 @@ export default function AdminProgramsPage() {
       if (editId === id) resetForm();
     } catch (e) {
       setError(e?.response?.data?.message || "Xóa chương trình thất bại");
+    } finally {
+      setDeletingId("");
     }
   };
 
@@ -223,7 +231,7 @@ export default function AdminProgramsPage() {
             okButtonProps={{ danger: true }}
             onConfirm={() => onDelete(getId(row))}
           >
-            <Button size="small" danger>
+            <Button size="small" danger loading={deletingId === getId(row)} disabled={!!deletingId}>
               Xóa
             </Button>
           </Popconfirm>
@@ -328,10 +336,10 @@ export default function AdminProgramsPage() {
             </Col>
             <Col span={24}>
               <Space wrap>
-                <Button type="primary" htmlType="submit">
+                <Button type="primary" htmlType="submit" loading={submitting} disabled={submitting}>
                   {editId ? "Cập nhật chương trình" : "Tạo chương trình"}
                 </Button>
-                {editId ? <Button onClick={resetForm}>Hủy sửa</Button> : null}
+                {editId ? <Button onClick={resetForm} disabled={submitting}>Hủy sửa</Button> : null}
               </Space>
             </Col>
           </Row>

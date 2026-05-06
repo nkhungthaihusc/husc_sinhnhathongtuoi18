@@ -74,6 +74,8 @@ export default function AdminMembersPage() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [togglingId, setTogglingId] = useState('');
 
   const load = async () => {
     const [userData, studentData] = await Promise.all([usersApi.getAll(), studentsApi.getAll()]);
@@ -211,6 +213,7 @@ export default function AdminMembersPage() {
       return;
     }
 
+    setSubmitting(true);
     try {
       if (editStudentId) {
         await studentsApi.updateInfo(editStudentId, {
@@ -256,6 +259,8 @@ export default function AdminMembersPage() {
       resetForm();
     } catch (e) {
       setError(e?.response?.data?.message || 'Không thể lưu dữ liệu thành viên');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -284,12 +289,15 @@ export default function AdminMembersPage() {
   const onToggleStatus = async (userId) => {
     setError('');
     setNotice('');
+    setTogglingId(userId);
     try {
       await usersApi.toggleStatus(userId);
       await load();
       setNotice('Cập nhật trạng thái tài khoản thành công.');
     } catch (e) {
       setError(e?.response?.data?.message || 'Không thể cập nhật trạng thái tài khoản');
+    } finally {
+      setTogglingId('');
     }
   };
 
@@ -352,7 +360,7 @@ export default function AdminMembersPage() {
                 cancelText="Hủy"
                 onConfirm={() => onToggleStatus(getId(row.user))}
               >
-                <Button size="small" danger>
+                <Button size="small" danger loading={togglingId === getId(row.user)} disabled={!!togglingId}>
                   Rời CLB
                 </Button>
               </Popconfirm>
@@ -364,7 +372,7 @@ export default function AdminMembersPage() {
                 cancelText="Hủy"
                 onConfirm={() => onToggleStatus(getId(row.user))}
               >
-                <Button size="small" type="primary">
+                <Button size="small" type="primary" loading={togglingId === getId(row.user)} disabled={!!togglingId}>
                   Trở lại CLB
                 </Button>
               </Popconfirm>
@@ -484,8 +492,8 @@ export default function AdminMembersPage() {
             </Col>
             <Col span={24}>
               <Space wrap>
-                <Button type="primary" htmlType="submit" disabled={hasErrors}>{editStudentId ? 'Lưu cập nhật' : 'Thêm thành viên'}</Button>
-                {editStudentId ? <Button onClick={resetForm}>Hủy sửa</Button> : null}
+                <Button type="primary" htmlType="submit" disabled={hasErrors || submitting} loading={submitting}>{editStudentId ? 'Lưu cập nhật' : 'Thêm thành viên'}</Button>
+                {editStudentId ? <Button onClick={resetForm} disabled={submitting}>Hủy sửa</Button> : null}
               </Space>
             </Col>
           </Row>
