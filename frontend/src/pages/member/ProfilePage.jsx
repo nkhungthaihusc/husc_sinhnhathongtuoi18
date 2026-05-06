@@ -1,10 +1,11 @@
-import { Alert, Button, Card, Col, Descriptions, Form, Input, InputNumber, Row, Space } from "antd";
+import { Alert, Button, Card, Col, Descriptions, Form, Input, InputNumber, Row, Select, Space } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
 import PageTitle from "../../components/PageTitle.jsx";
 import { useAuth } from "../../hooks/useAuth.js";
 import { studentsApi } from "../../services/api.js";
 import { formatDate, getId } from "../../utils/format.js";
+import { BLOOD_GROUPS, validatePhone, validateEmail, validateCCCD } from "../../utils/constants.js";
 
 export default function MemberProfilePage() {
   const { user } = useAuth();
@@ -33,11 +34,11 @@ export default function MemberProfilePage() {
         if (!mine) return;
         setStudent(mine);
         setForm({
-          phone: mine.phone || '',
-          email: mine.email || '',
+          phone: (mine.phone || '').trim(),
+          email: (mine.email || '').trim(),
           bloodGroup: mine.bloodGroup || '',
           yearStudy: mine.yearStudy || '',
-          cccd: mine.cccd || ''
+          cccd: (mine.cccd || '').trim()
         });
       } catch (e) {
         if (mounted) setError(e?.response?.data?.message || 'Không tải được hồ sơ cá nhân');
@@ -55,30 +56,65 @@ export default function MemberProfilePage() {
     if (!student) return null;
     const others = allStudents.filter(s => getId(s) !== getId(student));
     
-    if (fieldName === 'email' && value) {
-      if (others.some(s => s.email === value)) return 'Email này đã được sử dụng';
+    let err = null;
+    
+    // Validate using specific validators
+    if (fieldName === 'email') {
+      err = validateEmail(value);
+      if (!err && value) {
+        const normalizedValue = value.trim().toLowerCase();
+        if (others.some(s => (s.email || '').trim().toLowerCase() === normalizedValue)) {
+          err = 'Email này đã được sử dụng';
+        }
+      }
+    } else if (fieldName === 'phone') {
+      err = validatePhone(value);
+      if (!err && value) {
+        const normalizedValue = value.trim();
+        if (others.some(s => (s.phone || '').trim() === normalizedValue)) {
+          err = 'Số điện thoại này đã được sử dụng';
+        }
+      }
+    } else if (fieldName === 'cccd') {
+      err = validateCCCD(value);
+      if (!err && value) {
+        const normalizedValue = value.trim();
+        if (others.some(s => (s.cccd || '').trim() === normalizedValue)) {
+          err = 'CCCD này đã được sử dụng';
+        }
+      }
     }
-    if (fieldName === 'phone' && value) {
-      if (others.some(s => s.phone === value)) return 'Số điện thoại này đã được sử dụng';
-    }
-    if (fieldName === 'cccd' && value) {
-      if (others.some(s => s.cccd === value)) return 'CCCD này đã được sử dụng';
-    }
-    return null;
+    
+    return err;
   };
 
   const onChange = (event) => {
     const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    let finalValue = value;
     
-    const err = validateField(name, value);
+    // Trim whitespace for email, phone, cccd
+    if (['email', 'phone', 'cccd'].includes(name)) {
+      finalValue = value.trim();
+    }
+    
+    setForm((prev) => ({ ...prev, [name]: finalValue }));
+    
+    const err = validateField(name, finalValue);
     setFieldErrors((prev) => ({
       ...prev,
       [name]: err
     }));
   };
 
-  const hasErrors = useMemo(() => Object.values(fieldErrors).some(err => err), [fieldErrors]);
+  const hasErrors = useMemo(() => {
+    // Check if any field has validation error
+    if (Object.values(fieldErrors).some(err => err)) return true;
+    
+    // Check required fields
+    if (!form.email || !form.phone) return true;
+    
+    return false;
+  }, [fieldErrors, form]);
 
   if (loading) {
     return <LoadingScreen message="Đang tải hồ sơ cá nhân..." />;
@@ -117,11 +153,21 @@ export default function MemberProfilePage() {
       <Card className="surface-card">
         <Form layout="vertical" onSubmitCapture={onSubmit}>
           <Row gutter={16}>
-            <Col xs={24} md={12}><Form.Item label="Email" validateStatus={fieldErrors.email ? "error" : ""} help={fieldErrors.email}><Input name="email" value={form.email} onChange={onChange} /></Form.Item></Col>
-            <Col xs={24} md={12}><Form.Item label="Số điện thoại" validateStatus={fieldErrors.phone ? "error" : ""} help={fieldErrors.phone}><Input name="phone" value={form.phone} onChange={onChange} /></Form.Item></Col>
-            <Col xs={24} md={12}><Form.Item label="Nhóm máu"><Input name="bloodGroup" value={form.bloodGroup} onChange={onChange} /></Form.Item></Col>
-            <Col xs={24} md={12}><Form.Item label="CCCD" validateStatus={fieldErrors.cccd ? "error" : ""} help={fieldErrors.cccd}><Input name="cccd" value={form.cccd} onChange={onChange} /></Form.Item></Col>
-            <Col xs={24} md={12}><Form.Item label="Năm học"><InputNumber min={1} max={6} name="yearStudy" value={form.yearStudy} onChange={(value) => setForm((prev) => ({ ...prev, yearStudy: Number(value || 1) }))} style={{ width: "100%" }} /></Form.Item></Col>
+            <Col xs={24} md={12}><Form.Item label="Email" validateStatus={fieldErrors.email ? "error" : ""} help={fieldErrors.email}><Input name="email" type="email" value={form.email} onChange={onChange} /></Form.Item></Col>
+            <Col xs={24} md={12}><Form.Item label="Số điện thoại" validateStatus={fieldErrors.phone ? "error" : ""} help={fieldErrors.phone}><Input name="phone" value={form.phone} onChange={onChange} placeholder="0xxxxxxxxx" /></Form.Item></Col>
+            <Col xs={24} md={12}>
+              <Form.Item label="Nhóm máu">
+                <Select
+                  value={form.bloodGroup || undefined}
+                  onChange={(value) => setForm((prev) => ({ ...prev, bloodGroup: value || '' }))}
+                  allowClear
+                  placeholder="Chọn nhóm máu"
+                  options={BLOOD_GROUPS}
+                />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}><Form.Item label="CCCD" validateStatus={fieldErrors.cccd ? "error" : ""} help={fieldErrors.cccd}><Input name="cccd" value={form.cccd} onChange={onChange} placeholder="12 chữ số" maxLength="12" /></Form.Item></Col>
+            <Col xs={24} md={12}><Form.Item label="Năm học"><InputNumber min={1} max={8} name="yearStudy" value={form.yearStudy ? Number(form.yearStudy) : 1} onChange={(value) => setForm((prev) => ({ ...prev, yearStudy: Number(value || 1) }))} style={{ width: "100%" }} /></Form.Item></Col>
           </Row>
           <Button type="primary" htmlType="submit" disabled={hasErrors}>Lưu thay đổi</Button>
         </Form>

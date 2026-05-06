@@ -35,6 +35,9 @@ export const usersApi = {
   },
   leave(id) {
     return apiClient.patch(`/users/${id}/leave`, {}).then(unwrap);
+  },
+  toggleStatus(id) {
+    return apiClient.patch(`/users/${id}/toggle-status`, {}).then(unwrap);
   }
 };
 

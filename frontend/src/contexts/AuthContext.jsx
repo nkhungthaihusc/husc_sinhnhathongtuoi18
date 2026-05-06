@@ -2,13 +2,16 @@ import { useCallback, useMemo, useState } from 'react';
 import { authApi } from '../services/api.js';
 import { tokenStorage } from '../services/tokenStorage.js';
 import { AuthContext } from './auth-context.js';
+import { normalizeStudentIdForLogin } from '../utils/constants.js';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => tokenStorage.getUser());
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(tokenStorage.getAccessToken()));
 
   const login = useCallback(async (username, password) => {
-    const session = await authApi.login({ username, password });
+    // Normalize MSSV for login (convert lowercase 't' to uppercase 'T')
+    const normalizedUsername = normalizeStudentIdForLogin(username.trim());
+    const session = await authApi.login({ username: normalizedUsername, password });
     tokenStorage.setSession({
       accessToken: session?.accessToken,
       refreshToken: session?.refreshToken,

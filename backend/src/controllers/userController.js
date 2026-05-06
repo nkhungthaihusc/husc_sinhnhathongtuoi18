@@ -91,7 +91,56 @@ class userController {
       });
     }
   };
-  // PATCH /users/:id
+  // PATCH /users/:id/toggle-status - Rời hoặc trở lại CLB
+  toggleUserStatus = async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log("Toggle status for user ID:", id); // Debug log
+      
+      // Lấy trạng thái hiện tại
+      const user = await User.findById(id);
+      console.log("User found:", user); // Debug log
+      
+      if (!user) {
+        return res.status(404).json({
+          data: null,
+          code: 404,
+          message: "Không tìm thấy người dùng",
+        });
+      }
+
+      // Toggle giữa active và inactive
+      const newStatus = user.status === "active" ? "inactive" : "active";
+      console.log("New status will be:", newStatus); // Debug log
+      
+      const updateUser = await User.findByIdAndUpdate(
+        id,
+        { status: newStatus },
+        { new: true }
+      );
+      console.log("Updated user:", updateUser); // Debug log
+
+      const messageMap = {
+        active: "Thành viên đã trở lại CLB",
+        inactive: "Thành viên đã rời CLB"
+      };
+
+      res.status(200).json({
+        data: updateUser,
+        code: 200,
+        message: messageMap[newStatus],
+      });
+    } catch (error) {
+      console.error("Error in toggleUserStatus:", error); // Debug log
+      return res.status(500).json({
+        data: null,
+        code: 500,
+        message: error.message,
+      });
+    }
+  };
+
+  // PATCH /users/:id/leave - Rời CLB (giữ lại cho compatibility)
   leaveUser = async (req, res) => {
     try {
       const { id } = req.params;

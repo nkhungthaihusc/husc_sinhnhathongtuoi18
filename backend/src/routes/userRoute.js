@@ -8,6 +8,7 @@ import { protect, authorize } from "../middleware/auth.js";
 
 router.get('/', protect, authorize('admin'), userController.getAllUsers);
 router.post('/', protect, authorize('admin'), userController.createUser);
+router.patch('/:id/toggle-status', protect, authorize('admin'), userController.toggleUserStatus);
 router.patch('/:id/leave', protect, authorize('admin'), userController.leaveUser);
 router.patch('/:id/change', protect, authorize('admin'), userController.updateUser);
 

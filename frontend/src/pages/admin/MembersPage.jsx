@@ -22,6 +22,17 @@ import LoadingScreen from '../../components/LoadingScreen.jsx';
 import PageTitle from '../../components/PageTitle.jsx';
 import { studentsApi, usersApi } from '../../services/api.js';
 import { getId, formatUserStatus } from '../../utils/format.js';
+import { 
+  BLOOD_GROUPS, 
+  POSITIONS, 
+  CATEGORIES,
+  validateStudentId,
+  validateEmail,
+  validatePhone,
+  validateCCCD,
+  validateName,
+  capitalizeNames
+} from '../../utils/constants.js';
 
 const { Text } = Typography;
 
@@ -106,8 +117,20 @@ export default function AdminMembersPage() {
 
   const onChange = (event) => {
     const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    validateField(name, value);
+    let finalValue = value;
+    
+    // Auto-capitalize names
+    if (name === 'name') {
+      finalValue = capitalizeNames(value);
+    }
+    
+    // Trim whitespace for email, phone, cccd
+    if (['email', 'phone', 'cccd'].includes(name)) {
+      finalValue = value.trim();
+    }
+    
+    setForm((prev) => ({ ...prev, [name]: finalValue }));
+    validateField(name, finalValue);
   };
 
   const validateField = (fieldName, value) => {
@@ -117,24 +140,37 @@ export default function AdminMembersPage() {
     
     let err = null;
     
-    if (fieldName === 'studentId' && value) {
-      if (others.some(s => s.studentId === value)) {
+    // Validate using specific validators
+    if (fieldName === 'name') {
+      err = validateName(value);
+    } else if (fieldName === 'studentId') {
+      err = validateStudentId(value);
+      if (!err && value && others.some(s => s.studentId === value)) {
         err = 'MSSV này đã tồn tại';
       }
-    }
-    if (fieldName === 'email' && value) {
-      if (others.some(s => s.email === value)) {
-        err = 'Email này đã được sử dụng';
+    } else if (fieldName === 'email') {
+      err = validateEmail(value);
+      if (!err && value) {
+        const normalizedValue = value.trim().toLowerCase();
+        if (others.some(s => (s.email || '').trim().toLowerCase() === normalizedValue)) {
+          err = 'Email này đã được sử dụng';
+        }
       }
-    }
-    if (fieldName === 'phone' && value) {
-      if (others.some(s => s.phone === value)) {
-        err = 'Số điện thoại này đã được sử dụng';
+    } else if (fieldName === 'phone') {
+      err = validatePhone(value);
+      if (!err && value) {
+        const normalizedValue = value.trim();
+        if (others.some(s => (s.phone || '').trim() === normalizedValue)) {
+          err = 'Số điện thoại này đã được sử dụng';
+        }
       }
-    }
-    if (fieldName === 'cccd' && value) {
-      if (others.some(s => s.cccd === value)) {
-        err = 'CCCD này đã được sử dụng';
+    } else if (fieldName === 'cccd') {
+      err = validateCCCD(value);
+      if (!err && value) {
+        const normalizedValue = value.trim();
+        if (others.some(s => (s.cccd || '').trim() === normalizedValue)) {
+          err = 'CCCD này đã được sử dụng';
+        }
       }
     }
     
@@ -144,7 +180,15 @@ export default function AdminMembersPage() {
     }));
   };
 
-  const hasErrors = useMemo(() => Object.values(fieldErrors).some(err => err), [fieldErrors]);
+  const hasErrors = useMemo(() => {
+    // Check if any field has validation error
+    if (Object.values(fieldErrors).some(err => err)) return true;
+    
+    // Check required fields
+    if (!form.name || !form.studentId || !form.email || !form.phone) return true;
+    
+    return false;
+  }, [fieldErrors, form]);
 
   if (loading) {
     return <LoadingScreen message="Đang tải danh sách thành viên..." />;
@@ -222,12 +266,12 @@ export default function AdminMembersPage() {
     setForm({
       studentId: student.studentId || '',
       name: student.name || '',
-      email: student.email || '',
-      phone: student.phone || '',
+      email: (student.email || '').trim(),
+      phone: (student.phone || '').trim(),
       password: '',
       birthDate: toDatePickerValue(student.birthDate),
       joinDate: toDatePickerValue(student.joinDate),
-      cccd: student.cccd || '',
+      cccd: (student.cccd || '').trim(),
       bloodGroup: student.bloodGroup || '',
       group: student.group || '',
       category: student.category || '',
@@ -237,13 +281,13 @@ export default function AdminMembersPage() {
     });
   };
 
-  const onDeactivate = async (userId) => {
+  const onToggleStatus = async (userId) => {
     setError('');
     setNotice('');
     try {
-      await usersApi.leave(userId);
+      await usersApi.toggleStatus(userId);
       await load();
-      setNotice('Đã chuyển trạng thái tài khoản sang inactive.');
+      setNotice('Cập nhật trạng thái tài khoản thành công.');
     } catch (e) {
       setError(e?.response?.data?.message || 'Không thể cập nhật trạng thái tài khoản');
     }
@@ -299,19 +343,33 @@ export default function AdminMembersPage() {
           <Button size="small" onClick={() => onEdit(row)}>
             Sửa
           </Button>
-          {row.user && row.user.status === 'active' ? (
-        <Popconfirm
-          title="Cho rời CLB"
-          description="Chuyển tài khoản sang inactive?"
-          okText="Xác nhận"
-          cancelText="Hủy"
-          onConfirm={() => onDeactivate(getId(row.user))}
-        >
-          <Button size="small" danger>
-            Rời CLB
-          </Button>
-        </Popconfirm>
-      ) : null}
+          {row.user ? (
+            row.user.status === 'active' ? (
+              <Popconfirm
+                title="Cho rời CLB"
+                description="Chuyển tài khoản sang inactive?"
+                okText="Xác nhận"
+                cancelText="Hủy"
+                onConfirm={() => onToggleStatus(getId(row.user))}
+              >
+                <Button size="small" danger>
+                  Rời CLB
+                </Button>
+              </Popconfirm>
+            ) : (
+              <Popconfirm
+                title="Trở lại CLB"
+                description="Chuyển tài khoản sang active?"
+                okText="Xác nhận"
+                cancelText="Hủy"
+                onConfirm={() => onToggleStatus(getId(row.user))}
+              >
+                <Button size="small" type="primary">
+                  Trở lại CLB
+                </Button>
+              </Popconfirm>
+            )
+          ) : null}
         </Space>
       ),
     },
@@ -342,12 +400,22 @@ export default function AdminMembersPage() {
       <Card className="surface-card" title={editStudentId ? 'Cập nhật thành viên' : 'Thêm thành viên mới'}>
         <Form layout="vertical" onSubmitCapture={onSubmit}>
           <Row gutter={12}>
-            <Col xs={24} md={12} lg={8}><Form.Item label="Họ tên" required><Input name="name" value={form.name} onChange={onChange} /></Form.Item></Col>
-            <Col xs={24} md={12} lg={8}><Form.Item label="MSSV" required validateStatus={fieldErrors.studentId ? "error" : ""} help={fieldErrors.studentId}><Input name="studentId" value={form.studentId} onChange={onChange} disabled={Boolean(editStudentId)} /></Form.Item></Col>
-            <Col xs={24} md={12} lg={8}><Form.Item label="Email" required validateStatus={fieldErrors.email ? "error" : ""} help={fieldErrors.email}><Input name="email" value={form.email} onChange={onChange} type="email" /></Form.Item></Col>
-            <Col xs={24} md={12} lg={8}><Form.Item label="Số điện thoại" required validateStatus={fieldErrors.phone ? "error" : ""} help={fieldErrors.phone}><Input name="phone" value={form.phone} onChange={onChange} /></Form.Item></Col>
-            <Col xs={24} md={12} lg={8}><Form.Item label="CCCD" validateStatus={fieldErrors.cccd ? "error" : ""} help={fieldErrors.cccd}><Input name="cccd" value={form.cccd} onChange={onChange} /></Form.Item></Col>
-            <Col xs={24} md={12} lg={8}><Form.Item label="Nhóm máu"><Input name="bloodGroup" value={form.bloodGroup} onChange={onChange} /></Form.Item></Col>
+            <Col xs={24} md={12} lg={8}><Form.Item label="Họ tên" required validateStatus={fieldErrors.name ? "error" : ""} help={fieldErrors.name}><Input name="name" value={form.name} onChange={onChange} /></Form.Item></Col>
+            <Col xs={24} md={12} lg={8}><Form.Item label="MSSV" required validateStatus={fieldErrors.studentId ? "error" : ""} help={fieldErrors.studentId}><Input name="studentId" value={form.studentId} onChange={onChange} disabled={Boolean(editStudentId)} placeholder="xxTxxxxxxx" /></Form.Item></Col>
+            <Col xs={24} md={12} lg={8}><Form.Item label="Email" required validateStatus={fieldErrors.email ? "error" : ""} help={fieldErrors.email}><Input name="email" value={form.email} onChange={onChange} type="email" placeholder='email@gmail.com/msv@husc.edu.vn'/></Form.Item></Col>
+            <Col xs={24} md={12} lg={8}><Form.Item label="Số điện thoại" required validateStatus={fieldErrors.phone ? "error" : ""} help={fieldErrors.phone}><Input name="phone" value={form.phone} onChange={onChange} placeholder="0xxxxxxxxx" maxLength="10" /></Form.Item></Col>
+            <Col xs={24} md={12} lg={8}><Form.Item label="CCCD" validateStatus={fieldErrors.cccd ? "error" : ""} help={fieldErrors.cccd}><Input name="cccd" value={form.cccd} onChange={onChange} placeholder="12 chữ số" maxLength="12" /></Form.Item></Col>
+            <Col xs={24} md={12} lg={8}>
+              <Form.Item label="Nhóm máu">
+                <Select
+                  value={form.bloodGroup || undefined}
+                  onChange={(value) => setForm((prev) => ({ ...prev, bloodGroup: value || '' }))}
+                  allowClear
+                  placeholder="Chọn nhóm máu"
+                  options={BLOOD_GROUPS}
+                />
+              </Form.Item>
+            </Col>
             <Col xs={24} md={12} lg={8}>
               <Form.Item label="Thuộc ban">
                 <Select
@@ -364,9 +432,28 @@ export default function AdminMembersPage() {
                 />
               </Form.Item>
             </Col>
-            <Col xs={24} md={12} lg={8}><Form.Item label="Ngành"><Input name="category" value={form.category} onChange={onChange} /></Form.Item></Col>
+            <Col xs={24} md={12} lg={8}>
+              <Form.Item label="Ngành">
+                <Select
+                  value={form.category || undefined}
+                  onChange={(value) => setForm((prev) => ({ ...prev, category: value || '' }))}
+                  allowClear
+                  placeholder="Chọn ngành"
+                  options={CATEGORIES.map(cat => ({ label: cat, value: cat }))}
+                />
+              </Form.Item>
+            </Col>
             <Col xs={24} md={12} lg={8}><Form.Item label="Năm học"><InputNumber min={1} max={8} value={Number(form.yearStudy)} onChange={(value) => setForm((prev) => ({ ...prev, yearStudy: value || 1 }))} style={{ width: '100%' }} /></Form.Item></Col>
-            <Col xs={24} md={12} lg={8}><Form.Item label="Chức vụ"><Input name="position" value={form.position} onChange={onChange} /></Form.Item></Col>
+            <Col xs={24} md={12} lg={8}>
+              <Form.Item label="Chức vụ">
+                <Select
+                  value={form.position || 'Thành viên'}
+                  onChange={(value) => setForm((prev) => ({ ...prev, position: value }))}
+                  placeholder="Chọn chức vụ"
+                  options={POSITIONS}
+                />
+              </Form.Item>
+            </Col>
             <Col xs={24} md={12} lg={8}>
               <Form.Item label="Ngày sinh">
                 <DatePicker
