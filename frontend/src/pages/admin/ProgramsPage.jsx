@@ -195,6 +195,8 @@ export default function AdminProgramsPage() {
       dataIndex: "date",
       key: "date",
       width: 140,
+      sorter: (a, b) => new Date(b.date) - new Date(a.date),
+      defaultSortOrder: 'descend',
       render: (value) => formatDateTime(value),
     },
     {

@@ -14,6 +14,7 @@ export const BLOOD_GROUPS = [
 export const POSITIONS = [
   { label: 'Thành viên', value: 'Thành viên' },
   { label: 'Trưởng ban', value: 'Trưởng ban' },
+  { label: 'Phó ban', value: 'Phó ban' },
   { label: 'Chủ nhiệm', value: 'Chủ nhiệm' },
   { label: 'Phó chủ nhiệm', value: 'Phó chủ nhiệm' },
 ];

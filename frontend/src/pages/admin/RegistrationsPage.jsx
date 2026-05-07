@@ -57,7 +57,7 @@ export default function AdminRegistrationsPage() {
     try {
       const programData = await programsApi.getAllPaginated({ page: 1, limit: 100 });
       const nextPrograms = Array.isArray(programData?.data) ? programData.data : [];
-      const sortedPrograms = [...nextPrograms].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const sortedPrograms = [...nextPrograms].sort((a, b) => new Date(b.date) - new Date(a.date));
       setPrograms(sortedPrograms);
       setProgramMap(Object.fromEntries(sortedPrograms.map((item) => [getId(item), item])));
 
