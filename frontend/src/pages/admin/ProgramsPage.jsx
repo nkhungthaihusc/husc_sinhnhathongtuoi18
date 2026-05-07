@@ -21,7 +21,7 @@ import { useEffect, useMemo, useState } from "react";
 import LoadingScreen from "../../components/LoadingScreen.jsx";
 import PageTitle from "../../components/PageTitle.jsx";
 import { programsApi } from "../../services/api.js";
-import { formatDate, formatDateTime, getId } from "../../utils/format.js";
+import {  formatDateTime, getId } from "../../utils/format.js";
 
 const { Text } = Typography;
 
@@ -172,16 +172,20 @@ export default function AdminProgramsPage() {
             <Image
               src={row.image}
               alt={row.name}
-              width={72}
-              height={50}
-              style={{ objectFit: "cover", borderRadius: 10 }}
-              fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='50'%3E%3Crect width='72' height='50' fill='%23fee2e2'/%3E%3C/svg%3E"
+              width={50}
+              height={35}
+              style={{ objectFit: "cover", borderRadius: 6 }}
+              fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='35'%3E%3Crect width='50' height='35' fill='%23fee2e2'/%3E%3C/svg%3E"
               preview={false}
             />
           ) : null}
           <Space direction="vertical" size={0}>
-            <Text strong>{row.name}</Text>
-            <Text type="secondary">{row.location}</Text>
+            <Text strong style={{ fontSize: "13px" }}>
+              {row.name}
+            </Text>
+            <Text type="secondary" style={{ fontSize: "12px" }}>
+              {row.location}
+            </Text>
           </Space>
         </Space>
       ),
@@ -211,8 +215,25 @@ export default function AdminProgramsPage() {
       title: "Mô tả",
       dataIndex: "description",
       key: "description",
+      width: 200,
       responsive: ["lg"],
-      render: (value) => value || "-",
+      render: (value) => (
+        <div
+          style={{
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            fontSize: "12px",
+            lineHeight: "1.4",
+            whiteSpace: "normal",
+            color: "#666",
+          }}
+        >
+          {value || "-"}
+        </div>
+      ),
     },
     {
       title: "Thao tác",
@@ -359,6 +380,7 @@ export default function AdminProgramsPage() {
             placeholder="Tìm theo tên hoặc địa điểm"
           />
           <Table
+            size="small"
             rowKey={getId}
             columns={columns}
             dataSource={filtered}
