@@ -30,6 +30,7 @@ export default function AdminRegistrationsPage() {
   const [editingId, setEditingId] = useState('');
   const [payload, setPayload] = useState({ result: 'pending', reason: '' });
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('createdAt');
   const [tableLoading, setTableLoading] = useState(false);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
@@ -96,11 +97,28 @@ export default function AdminRegistrationsPage() {
 
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((row) =>
-      `${row.name || ''} ${row.studentId || ''} ${programMap[row.bloodProgramId]?.name || ''}`.toLowerCase().includes(q),
-    );
-  }, [rows, search, programMap]);
+    let filtered = rows;
+    if (q) {
+      filtered = rows.filter((row) =>
+        `${row.name || ''} ${row.studentId || ''} ${programMap[row.bloodProgramId]?.name || ''}`.toLowerCase().includes(q),
+      );
+    }
+    
+    const sorted = [...filtered];
+    if (sortBy === 'name') {
+      sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    } else if (sortBy === 'createdAt') {
+      sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else if (sortBy === 'result') {
+      const resultOrder = { pending: 0, approved: 1, rejected: 2, cancelled: 3 };
+      sorted.sort((a, b) => {
+        const orderA = resultOrder[String(a.result || '').toLowerCase()] ?? 99;
+        const orderB = resultOrder[String(b.result || '').toLowerCase()] ?? 99;
+        return orderA - orderB;
+      });
+    }
+    return sorted;
+  }, [rows, search, sortBy, programMap]);
 
   const stats = useMemo(() => {
     const total = rows.length;
@@ -234,6 +252,16 @@ export default function AdminRegistrationsPage() {
                 value: getId(item),
                 label: `${item.name} - ${formatDateTime(item.date)}`,
               }))}
+            />
+            <Select
+              value={sortBy}
+              onChange={setSortBy}
+              style={{ width: 180 }}
+              options={[
+                { value: 'createdAt', label: 'Mới nhất' },
+                { value: 'name', label: 'Họ tên (A-Z)' },
+                { value: 'result', label: 'Kết quả' },
+              ]}
             />
             <Input.Search
               allowClear
