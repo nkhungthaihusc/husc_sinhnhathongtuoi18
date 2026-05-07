@@ -48,7 +48,10 @@ export default function MemberDashboardPage() {
   // );
 
   const upcomingPrograms = useMemo(
-    () => [...programs].sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 5),
+    () => [...programs]
+      .filter((item) => new Date(item.date) >= new Date())
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .slice(0, 5),
     [programs]
   );
 
