@@ -14,6 +14,13 @@ export default function AdminDashboardPage() {
   const [programs, setPrograms] = useState([]);
   const [programTotal, setProgramTotal] = useState(0);
   const [registers, setRegisters] = useState([]);
+  const [registerStats, setRegisterStats] = useState({
+    total: 0,
+    approved: 0,
+    rejected: 0,
+    cancelled: 0,
+    pending: 0
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,12 +38,20 @@ export default function AdminDashboardPage() {
         setPrograms(programList);
         setProgramTotal(programData?.pagination?.totalItems || 0);
         setRegisters(Array.isArray(registerData["bloodRegisters"]) ? registerData["bloodRegisters"] : []);
+        setRegisterStats({
+          total: registerData?.total || 0,
+          approved: registerData?.approved || 0,
+          rejected: registerData?.rejected || 0,
+          cancelled: registerData?.cancelled || 0,
+          pending: registerData?.pending || 0
+        });
       } catch {
         if (mounted) {
           setStudents([]);
           setPrograms([]);
           setProgramTotal(0);
           setRegisters([]);
+          setRegisterStats({ total: 0, approved: 0, rejected: 0, cancelled: 0, pending: 0 });
         }
       } finally {
         if (mounted) setLoading(false);
@@ -49,10 +64,9 @@ export default function AdminDashboardPage() {
   }, []);
 
   const approvedRate = useMemo(() => {
-    if (!registers.length) return 0;
-    const approved = registers.filter((item) => String(item.result || '').toLowerCase() === 'approved').length;
-    return Math.round((approved / registers.length) * 100);
-  }, [registers]);
+    if (registerStats.total === 0) return 0;
+    return Math.round((registerStats.approved / registerStats.total) * 100);
+  }, [registerStats]);
 
   const latestRegisters = useMemo(
     () => {
@@ -142,7 +156,7 @@ export default function AdminDashboardPage() {
         </Col>
         <Col xs={24} sm={12} xl={6}>
           <Card className="surface-card admin-stat-card">
-            <Statistic title="Đăng ký" value={registers.length} />
+            <Statistic title="Đăng ký" value={registerStats.total} />
             <Text type="secondary">Tổng đơn đăng ký đang được quản lý.</Text>
           </Card>
         </Col>
