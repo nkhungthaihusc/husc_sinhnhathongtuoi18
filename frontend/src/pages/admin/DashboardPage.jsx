@@ -3,8 +3,9 @@ import { Card, Col, Empty, Progress, Row, Space, Statistic, Table, Typography } 
 import { useEffect, useMemo, useState } from 'react';
 import LoadingScreen from '../../components/LoadingScreen.jsx';
 import PageTitle from '../../components/PageTitle.jsx';
+import StatusBadge from '../../components/StatusBadge.jsx';
 import { programsApi, registersApi, studentsApi } from '../../services/api.js';
-import { formatDateTime, getId, mapRegisterStatus } from '../../utils/format.js';
+import { formatDateTime, getId, mapRegisterStatus, getStatusDisplay, getResultDisplay, isCancelled } from '../../utils/format.js';
 
 
 const { Text } = Typography;
@@ -120,11 +121,20 @@ export default function AdminDashboardPage() {
       ),
     },
     {
+      title: 'Trạng thái',
+      key: 'status',
+      width: 140,
+      render: (_, row) => {
+        const display = getStatusDisplay(row.status, row.result);
+        return <StatusBadge tone={display.tone}>{display.label}</StatusBadge>;
+      },
+    },
+    {
       title: 'Kết quả',
-      dataIndex: 'result',
       key: 'result',
-      render: (value) => {
-        const status = mapRegisterStatus(value);
+      width: 140,
+      render: (_, row) => {
+        const status = getResultDisplay(row.result, row.status);
         return <Text>{status.label}</Text>;
       },
     },

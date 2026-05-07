@@ -121,31 +121,65 @@ export default function AdminNotificationsPage() {
       title: 'Tiêu đề',
       dataIndex: 'title',
       key: 'title',
-      render: (value) => <Text strong>{value}</Text>,
+      width: '30%',
+      render: (value) => <Text strong style={{ fontSize: '14px', color: '#1f2937' }}>{value}</Text>,
     },
     {
       title: 'Nội dung',
       dataIndex: 'content',
       key: 'content',
-      render: (value) => <Typography.Paragraph style={{ marginBottom: 0 }} ellipsis={{ rows: 2, expandable: false }}>{value}</Typography.Paragraph>,
+      width: '40%',
+      render: (value) => (
+        <Typography.Paragraph 
+          style={{ marginBottom: 0, color: '#6b7280', fontSize: '13px', lineHeight: '1.5' }} 
+          ellipsis={{ rows: 2, expandable: true, symbol: 'Xem thêm' }}
+        >
+          {value}
+        </Typography.Paragraph>
+      ),
     },
     {
       title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      width: 170,
+      width: '20%',
       responsive: ['md'],
-      render: (value) => formatDateTime(value),
+      render: (value) => <span style={{ color: '#6b7280', fontSize: '13px' }}>{formatDateTime(value)}</span>,
     },
     {
       title: 'Thao tác',
       key: 'actions',
-      width: 160,
+      width: '10%',
+      align: 'center',
       render: (_, row) => (
-        <Space>
-          <Button size="small" onClick={() => onEdit(row)}>Sửa</Button>
-          <Popconfirm title="Xóa thông báo" description="Bạn chắc chắn muốn xóa thông báo này?" okText="Xóa" cancelText="Hủy" okButtonProps={{ danger: true }} onConfirm={() => onDelete(getId(row))}>
-            <Button size="small" danger loading={deletingId === getId(row)} disabled={!!deletingId}>Xóa</Button>
+        <Space size="small">
+          <Button 
+            size="small" 
+            type="primary" 
+            ghost
+            onClick={() => onEdit(row)}
+            style={{ height: 28, fontSize: '12px' }}
+          >
+            Sửa
+          </Button>
+          <Popconfirm 
+            title="Xóa thông báo" 
+            description="Bạn chắc chắn muốn xóa thông báo này?" 
+            okText="Xóa" 
+            cancelText="Hủy" 
+            okButtonProps={{ danger: true }} 
+            onConfirm={() => onDelete(getId(row))}
+          >
+            <Button 
+              size="small" 
+              danger 
+              ghost
+              loading={deletingId === getId(row)} 
+              disabled={!!deletingId}
+              style={{ height: 28, fontSize: '12px' }}
+            >
+              Xóa
+            </Button>
           </Popconfirm>
         </Space>
       ),

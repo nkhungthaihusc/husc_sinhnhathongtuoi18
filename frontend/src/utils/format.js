@@ -32,11 +32,53 @@ export function formatTime(value) {
   return `${hours}:${minutes}`;
 }
 
-export function mapRegisterStatus(status) {
-  const normalized = String(status || '').toLowerCase();
+export function mapRegisterStatus(resultValue) {
+  const normalized = String(resultValue || '').toLowerCase();
   if (normalized === 'approved' || normalized === 'success') return { label: 'Thành công', tone: 'ok' };
   if (normalized === 'rejected' || normalized === 'reject') return { label: 'Từ chối', tone: 'danger' };
   if (normalized === 'cancelled') return { label: 'Đã hủy', tone: 'warn' };
+  return { label: 'Chờ duyệt', tone: 'pending' };
+}
+
+export function getStatusDisplay(statusValue, resultValue) {
+  const status = String(statusValue || '').toLowerCase();
+  const result = String(resultValue || '').toLowerCase();
+  
+  if (status === 'cancelled' || result === 'cancelled') {
+    return { label: 'Đã hủy', tone: 'warn' };
+  }
+  
+  if (status === 'approved') return { label: 'Đã duyệt', tone: 'ok' };
+  if (status === 'rejected') return { label: 'Từ chối', tone: 'danger' };
+  return { label: 'Chờ duyệt', tone: 'pending' };
+}
+
+export function isCancelled(statusValue, resultValue) {
+  const status = String(statusValue || '').toLowerCase();
+  const result = String(resultValue || '').toLowerCase();
+  return status === 'cancelled' || result === 'cancelled';
+}
+
+export function getResultDisplay(resultValue, statusValue) {
+  const result = String(resultValue || '').toLowerCase();
+  const status = String(statusValue || '').toLowerCase();
+  
+  if (status === 'cancelled' || result === 'cancelled') {
+    return { label: 'Đã hủy', tone: 'warn' };
+  }
+  
+  if (status === 'approved' && result === 'pending') {
+    return { label: 'Chờ kết quả', tone: 'pending' };
+  }
+  
+  if (result === 'approved') {
+    return { label: 'Thành công', tone: 'ok' };
+  }
+  
+  if (result === 'rejected') {
+    return { label: 'Từ chối', tone: 'danger' };
+  }
+  
   return { label: 'Chờ duyệt', tone: 'pending' };
 }
 

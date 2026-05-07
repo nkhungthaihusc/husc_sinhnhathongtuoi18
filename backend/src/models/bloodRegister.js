@@ -12,6 +12,7 @@ const BloodRegisterSchema = new mongoose.Schema({
     address: { type: String, required: true },
     lastDateDonate: { type: Date, required: false, default: null },
     note: { type: String, required: false, default: '' },
+    status: { type: String, required: true, enum: ['pending', 'approved', 'rejected', 'cancelled'], default: "pending" },
     result: { type: String, required: true, enum: ['pending', 'approved', 'rejected', 'cancelled'], default: "pending" },
     reason: { type: String, required: true, default: "null" },
 

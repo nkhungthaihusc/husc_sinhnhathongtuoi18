@@ -18,7 +18,8 @@ import { useEffect, useState } from "react";
 import PageTitle from "../../components/PageTitle.jsx";
 import { registersApi, programsApi } from "../../services/api.js";
 import StatusBadge from "../../components/StatusBadge.jsx";
-import { formatDateTime, getId, mapRegisterStatus } from "../../utils/format.js";
+import { formatDateTime, getId, mapRegisterStatus, getStatusDisplay, getResultDisplay, isCancelled } from "../../utils/format.js";
+import { getErrorMessage } from '../../utils/errorHelper.js';
 
 const LOOKUP_PAGE_SIZE = 10;
 
@@ -105,7 +106,7 @@ export default function LookupPage() {
         setRows([]);
         setSummary({ TongSoLanHien: 0 });
         setPagination({ page: 1, limit: LOOKUP_PAGE_SIZE, totalItems: 0, totalPages: 1 });
-        setError(e?.response?.data?.message || 'Không thể tra cứu. Hãy đăng nhập nếu API yêu cầu xác thực.');
+        setError(getErrorMessage(e, 'Không thể tra cứu. Hãy đăng nhập nếu API yêu cầu xác thực.'));
       } finally {
         setLoading(false);
       }
@@ -148,7 +149,7 @@ export default function LookupPage() {
       setCancelTarget(null);
       setCancelReason('');
     } catch (e) {
-      setError(e?.response?.data?.message || 'Không thể hủy đăng ký. Vui lòng thử lại.');
+      setError(getErrorMessage(e, 'Không thể hủy đăng ký. Vui lòng thử lại.'));
     } finally {
       setCancelingId('');
     }
@@ -211,10 +212,18 @@ export default function LookupPage() {
               { title: "Người đăng ký", dataIndex: "name", render: (value) => value || "-" },
               { title: "MSSV", dataIndex: "studentId", render: (value) => value || "-" },
               {
+                title: "Trạng thái",
+                key: "status",
+                render: (_, row) => {
+                  const display = getStatusDisplay(row.status, row.result);
+                  return <StatusBadge tone={display.tone}>{display.label}</StatusBadge>;
+                },
+              },
+              {
                 title: "Kết quả",
-                dataIndex: "result",
-                render: (result) => {
-                  const mapped = mapRegisterStatus(result);
+                key: "result",
+                render: (_, row) => {
+                  const mapped = getResultDisplay(row.result, row.status);
                   return <StatusBadge tone={mapped.tone}>{mapped.label}</StatusBadge>;
                 },
               },
@@ -314,7 +323,8 @@ export default function LookupPage() {
           <div><strong>Người đăng ký:</strong> {detailTarget?.name || "-"}</div>
           <div><strong>MSSV:</strong> {detailTarget?.studentId || "-"}</div>
           <div><strong>Chương trình:</strong> {getProgramName(detailTarget?.bloodProgramId)}</div>
-          <div><strong>Kết quả:</strong> {mapRegisterStatus(detailTarget?.result).label}</div>
+          <div><strong>Trạng thái:</strong> {getStatusDisplay(detailTarget?.status, detailTarget?.result).label}</div>
+          <div><strong>Kết quả:</strong> {getResultDisplay(detailTarget?.result, detailTarget?.status).label}</div>
           <div><strong>Ngày xác nhận:</strong> {detailTarget?.updatedAt ? formatDateTime(detailTarget.updatedAt) : "-"}</div>
           <div><strong>Lý do:</strong> {renderBlankIfNullText(detailTarget?.reason)}</div>
         </Space>

@@ -5,7 +5,8 @@ import PageTitle from '../../components/PageTitle.jsx';
 import StatusBadge from '../../components/StatusBadge.jsx';
 import { useAuth } from '../../hooks/useAuth.js';
 import { programsApi, registersApi } from '../../services/api.js';
-import { formatDateTime, getId, mapRegisterStatus } from '../../utils/format.js';
+import { formatDateTime, getId, mapRegisterStatus, getStatusDisplay, getResultDisplay, isCancelled } from '../../utils/format.js';
+import { getErrorMessage } from '../../utils/errorHelper.js';
 
 export default function MemberHistoryPage() {
   const { user } = useAuth();
@@ -35,7 +36,7 @@ export default function MemberHistoryPage() {
         const mapped = Object.fromEntries((programData?.data || []).map((program) => [getId(program), program]));
         setProgramMap(mapped);
       } catch (e) {
-        if (mounted) setError(e?.response?.data?.message || 'Không tải được lịch sử hiến máu');
+        if (mounted) setError(getErrorMessage(e, 'Không tải được lịch sử hiến máu'));
       } finally {
         if (mounted) setLoading(false);
       }
@@ -57,7 +58,7 @@ export default function MemberHistoryPage() {
       const mapped = Object.fromEntries((programData?.data || []).map((program) => [getId(program), program]));
       setProgramMap(mapped);
     } catch (e) {
-      setError(e?.response?.data?.message || 'Không tải được lịch sử hiến máu');
+        setError(getErrorMessage(e, 'Không tải được lịch sử hiến máu'));
     }
   };
 
@@ -65,12 +66,12 @@ export default function MemberHistoryPage() {
     setCancelLoading(true);
     setError('');
     try {
-      await registersApi.update(registerId, { result: 'cancelled', reason: 'Người dùng hủy' });
+      await registersApi.update(registerId, { status: 'cancelled', result: 'cancelled', reason: 'Người dùng hủy' });
       await load();
       setDetailOpen(false);
       setDetailTarget(null);
     } catch (e) {
-      setError(e?.response?.data?.message || 'Không thể hủy đơn đăng ký');
+      setError(getErrorMessage(e, 'Không thể hủy đơn đăng ký'));
     } finally {
       setCancelLoading(false);
     }
@@ -93,11 +94,20 @@ export default function MemberHistoryPage() {
       render: (_, row) => programMap[row.bloodProgramId]?.name || row.bloodProgramId || '-',
     },
     {
+      title: 'Trạng thái',
+      key: 'status',
+      width: 140,
+      render: (_, row) => {
+        const display = getStatusDisplay(row.status, row.result);
+        return <StatusBadge tone={display.tone}>{display.label}</StatusBadge>;
+      },
+    },
+    {
       title: 'Kết quả',
       key: 'result',
       width: 140,
       render: (_, row) => {
-        const status = mapRegisterStatus(row.result);
+        const status = getResultDisplay(row.result, row.status);
         return <StatusBadge tone={status.tone}>{status.label}</StatusBadge>;
       },
     },
@@ -200,7 +210,8 @@ export default function MemberHistoryPage() {
       >
         <Space direction="vertical" size={10} style={{ width: '100%' }}>
           <div><strong>Chương trình:</strong> {detailTarget ? (programMap[detailTarget.bloodProgramId]?.name || detailTarget.bloodProgramId || '-') : '-'}</div>
-          <div><strong>Kết quả:</strong> {mapRegisterStatus(detailTarget?.result).label}</div>
+          <div><strong>Trạng thái:</strong> {getStatusDisplay(detailTarget?.status, detailTarget?.result).label}</div>
+          <div><strong>Kết quả:</strong> {getResultDisplay(detailTarget?.result, detailTarget?.status).label}</div>
           <div><strong>Lý do:</strong> {renderBlankIfNullText(detailTarget?.reason)}</div>
           <div><strong>Ngày đăng ký:</strong> {formatDateTime(detailTarget?.createdAt)}</div>
         </Space>

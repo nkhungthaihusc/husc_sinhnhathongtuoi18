@@ -18,7 +18,8 @@ import LoadingScreen from '../../components/LoadingScreen.jsx';
 import PageTitle from '../../components/PageTitle.jsx';
 import StatusBadge from '../../components/StatusBadge.jsx';
 import { programsApi, registersApi } from '../../services/api.js';
-import { formatDate, formatDateTime, getId, mapRegisterStatus } from '../../utils/format.js';
+import { formatDate, formatDateTime, getId, mapRegisterStatus, getStatusDisplay, getResultDisplay, isCancelled } from '../../utils/format.js';
+import { getErrorMessage } from '../../utils/errorHelper.js';
 
 const { Text } = Typography;
 
@@ -28,7 +29,7 @@ export default function AdminRegistrationsPage() {
   const [programMap, setProgramMap] = useState({});
   const [selectedProgramId, setSelectedProgramId] = useState('');
   const [editingId, setEditingId] = useState('');
-  const [payload, setPayload] = useState({ result: 'pending', reason: '' });
+  const [payload, setPayload] = useState({ status: 'pending', result: 'pending', reason: '' });
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('createdAt');
   const [tableLoading, setTableLoading] = useState(false);
@@ -46,9 +47,9 @@ export default function AdminRegistrationsPage() {
     try {
       const registerData = await registersApi.searchByProgramId(programId);
       setRows(Array.isArray(registerData?.bloodRegisters) ? registerData.bloodRegisters : []);
-    } catch {
+    } catch (e) {
       setRows([]);
-      setError('Không thể tải danh sách đăng ký theo sự kiện đã chọn');
+      setError(getErrorMessage(e, 'Không thể tải danh sách đăng ký theo sự kiện đã chọn'));
     } finally {
       setTableLoading(false);
     }
@@ -65,10 +66,10 @@ export default function AdminRegistrationsPage() {
       const initialProgramId = sortedPrograms[0] ? getId(sortedPrograms[0]) : '';
       setSelectedProgramId(initialProgramId);
       await loadRegistersByProgram(initialProgramId);
-    } catch {
+    } catch (e) {
       setPrograms([]);
       setRows([]);
-      setError('Không thể tải danh sách sự kiện hiến máu');
+      setError(getErrorMessage(e, 'Không thể tải danh sách sự kiện hiến máu'));
     }
   }, [loadRegistersByProgram]);
 
@@ -136,6 +137,7 @@ export default function AdminRegistrationsPage() {
   const onStartEdit = (row) => {
     setEditingId(getId(row));
     setPayload({
+      status: row.status || 'pending',
       result: row.result || 'pending',
       reason: row.reason || '',
       note: row.note || '',
@@ -159,7 +161,7 @@ export default function AdminRegistrationsPage() {
       setEditingId('');
       setNotice('Cập nhật đăng ký thành công.');
     } catch (e) {
-      setError(e?.response?.data?.message || 'Không thể cập nhật đăng ký');
+      setError(getErrorMessage(e, 'Không thể cập nhật đăng ký'));
     } finally {
       setSaving(false);
     }
@@ -182,11 +184,20 @@ export default function AdminRegistrationsPage() {
       render: (_, row) => programMap[row.bloodProgramId]?.name || row.bloodProgramId || '-',
     },
     {
+      title: 'Trạng thái',
+      key: 'status',
+      width: 140,
+      render: (_, row) => {
+        const display = getStatusDisplay(row.status, row.result);
+        return <StatusBadge tone={display.tone}>{display.label}</StatusBadge>;
+      },
+    },
+    {
       title: 'Kết quả',
       key: 'result',
       width: 140,
       render: (_, row) => {
-        const status = mapRegisterStatus(row.result);
+        const status = getResultDisplay(row.result, row.status);
         return <StatusBadge tone={status.tone}>{status.label}</StatusBadge>;
       },
     },
@@ -302,8 +313,11 @@ export default function AdminRegistrationsPage() {
         />
       </Card>
 
-      <Modal open={Boolean(editingId)} title="Cập nhật trạng thái đơn" onCancel={() => setEditingId('')} onOk={onSave} okText="Lưu trạng thái" cancelText="Hủy" okButtonProps={{ loading: saving, disabled: saving }} cancelButtonProps={{ disabled: saving }}>
+      <Modal open={Boolean(editingId)} title="Cập nhật trạng thái đơn" onCancel={() => setEditingId('')} onOk={onSave} okText="Lưu trạng thái" cancelText="Hủy" okButtonProps={{ loading: saving, disabled: saving || isCancelled(currentRow?.status, currentRow?.result) }} cancelButtonProps={{ disabled: saving }}>
         <Space direction="vertical" size={12} style={{ width: '100%' }}>
+          {isCancelled(currentRow?.status, currentRow?.result) && (
+            <Alert type="warning" showIcon message="Đơn này đã bị hủy và không thể chỉnh sửa." style={{ marginBottom: 8 }} />
+          )}
           <div style={{ fontWeight: 600 }}>Thông tin đăng ký</div>
           <div><strong>Người đăng ký:</strong> {currentRow?.name || '-'}</div>
           <div><strong>MSSV:</strong> {currentRow?.studentId || '-'}</div>
@@ -315,7 +329,7 @@ export default function AdminRegistrationsPage() {
           <div><strong>Ngày hiến trước:</strong> {currentRow?.lastDateDonate ? formatDate(currentRow.lastDateDonate) : '-'}</div>
           <div><strong>Chương trình:</strong> {programMap[currentRow?.bloodProgramId]?.name || currentRow?.bloodProgramId || '-'}</div>
           <div><strong>Ngày xác nhận:</strong> {currentRow?.updatedAt ? formatDateTime(currentRow.updatedAt) : '-'}</div>
-          <div><strong>Kết quả:</strong> {mapRegisterStatus(currentRow?.result).label}</div>
+          <div><strong>Kết quả:</strong> {getResultDisplay(currentRow?.result, currentRow?.status).label}</div>
           <div><strong>Lý do:</strong> {renderBlankIfNullText(currentRow?.reason)}</div>
           <div><strong>Ghi chú:</strong> {currentRow?.note || '-'}</div>
           <div><strong>Ngày tạo:</strong> {currentRow?.createdAt ? formatDateTime(currentRow.createdAt) : '-'}</div>
@@ -326,12 +340,41 @@ export default function AdminRegistrationsPage() {
                 <Input.TextArea value={payload.note} readOnly rows={3} />
               </Form.Item>
             )}
+            <Form.Item label="Trạng thái">
+              <Select 
+                value={payload.status} 
+                disabled={isCancelled(currentRow?.status, currentRow?.result)}
+                onChange={(value) => {
+                  const newPayload = { ...payload, status: value };
+                  if (value === 'rejected') {
+                    newPayload.result = 'rejected';
+                  }
+                  setPayload(newPayload);
+                }} 
+                options={[
+                  { value: 'pending', label: 'Chờ duyệt' },
+                  { value: 'approved', label: 'Được phê duyệt' },
+                  { value: 'rejected', label: 'Bị từ chối' }
+                ]} 
+              />
+            </Form.Item>
             <Form.Item label="Kết quả đơn">
-              {String(payload.result || '').toLowerCase() === 'cancelled' ? (
-                <Select value={payload.result} disabled options={[]} />
-              ) : (
-                <Select value={payload.result} onChange={(value) => setPayload((prev) => ({ ...prev, result: value }))} options={[{ value: 'approved', label: 'Được phê duyệt' }, { value: 'rejected', label: 'Bị từ chối' }]} />
-              )}
+              <Select 
+                value={payload.result} 
+                disabled={isCancelled(currentRow?.status, currentRow?.result)}
+                onChange={(value) => {
+                  const newPayload = { ...payload, result: value };
+                  if (value === 'rejected') {
+                    newPayload.status = 'rejected';
+                  }
+                  setPayload(newPayload);
+                }} 
+                options={[
+                  { value: 'pending', label: 'Chờ duyệt' },
+                  { value: 'approved', label: 'Được phê duyệt' },
+                  { value: 'rejected', label: 'Bị từ chối' }
+                ]} 
+              />
             </Form.Item>
             <Form.Item label="Lý do (nếu có)">
               <Input value={payload.reason} onChange={(event) => setPayload((prev) => ({ ...prev, reason: event.target.value }))} placeholder="Nhập lý do" />

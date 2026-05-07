@@ -291,6 +291,28 @@ class BloodRegisterController {
       const { id } = req.params;
       let updateData = { ...req.body };
       
+      // Validate status
+      if (updateData.status) {
+        const validStatuses = ['pending', 'approved', 'rejected', 'cancelled'];
+        if (!validStatuses.includes(String(updateData.status || '').toLowerCase())) {
+          return res.status(400).json({ 
+            code: 400, 
+            message: "Trạng thái không hợp lệ" 
+          });
+        }
+      }
+      
+      // Validate result
+      if (updateData.result) {
+        const validResults = ['pending', 'approved', 'rejected', 'cancelled'];
+        if (!validResults.includes(String(updateData.result || '').toLowerCase())) {
+          return res.status(400).json({ 
+            code: 400, 
+            message: "Kết quả không hợp lệ" 
+          });
+        }
+      }
+      
       // Convert date fields to UTC+7 if they exist
       const dateFields = ['lastDateDonate'];
       updateData = convertObjectDatesToUTC7(updateData, dateFields);
@@ -318,6 +340,7 @@ class BloodRegisterController {
       const canceledBloodRegister = await BloodRegister.findByIdAndUpdate(
         id,
         {
+          status: "cancelled",
           result: "cancelled",
           reason: reason || "Người dùng tự hủy đăng ký",
         },

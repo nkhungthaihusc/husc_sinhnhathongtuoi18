@@ -96,6 +96,18 @@ export default function RegisterPage() {
     return isProgramRegistrationOpen(program) ? null : program;
   }, [programs, selectedProgramId]);
 
+  const isFormValid = useMemo(() => {
+    const programId = form.bloodProgramId || selectedProgramId;
+    return (
+      form.name.trim() !== '' &&
+      form.phone.trim() !== '' &&
+      form.email.trim() !== '' &&
+      form.CCCD.trim() !== '' &&
+      form.address.trim() !== '' &&
+      programId !== ''
+    );
+  }, [form, selectedProgramId]);
+
   if (initialLoading) {
     return <LoadingScreen message="Đang tải form đăng ký..." />;
   }
@@ -216,7 +228,7 @@ export default function RegisterPage() {
             <Col span={24}><Form.Item label="Ghi chú"><Input.TextArea rows={3} name="note" value={form.note} onChange={onChange} /></Form.Item></Col>
             <Col span={24}>
               <Space wrap>
-                <Button loading={loading} type="primary" htmlType="submit">Gửi đăng ký</Button>
+                <Button loading={loading} type="primary" htmlType="submit" disabled={!isFormValid || loading}>Gửi đăng ký</Button>
                 <Button onClick={() => navigate("/programs")}>Xem chương trình</Button>
               </Space>
             </Col>
